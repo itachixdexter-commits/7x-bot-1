@@ -24,7 +24,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Replace with your bot token
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "8729922349:AAGALtZjbmQAmZFx0wEynXK8osEDOAVsG1o"
 
 # States for ConversationHandler
 ( 
@@ -41,22 +41,14 @@ TOKEN = "YOUR_BOT_TOKEN"
 
 # Main menu keyboard
 main_menu_keyboard = [
-    [InlineKeyboardButton("ملفات موقع 🌐", callback_data=\'website_files\')],
-    [InlineKeyboardButton("معلومات IP 📍", callback_data=\'ip_info\')],
-    [InlineKeyboardButton("ايميل وهمي 📧", callback_data=\'temp_email\')],
-    [InlineKeyboardButton("ادوات اختراق 🛠️", callback_data=\'hacking_tools\')],
-    [InlineKeyboardButton("بحث عن مستخدم 🔍", callback_data=\'search_user\')],
-    [InlineKeyboardButton("سحب الحافظه 📋", callback_data=\'clipboard_pull\')],
-    [InlineKeyboardButton("اسمع بث التلفزيون 📺", callback_data=\'tv_broadcast\')],
-    [InlineKeyboardButton("صوت ضحيه 🎤", callback_data=\'victim_sound\')],
-    [InlineKeyboardButton("كيف تصبح هاكر 👨‍💻", callback_data=\'how_to_be_hacker\')],
-    [InlineKeyboardButton("فك تشفير سكربتات روبلوكس base64 🔓", callback_data=\'decrypt_roblox\')],
-    [InlineKeyboardButton("معلومات حساب روبلوكس 👤", callback_data=\'roblox_account_info\')],
-    [InlineKeyboardButton("زخرفه ✨", callback_data=\'decorate_text\')],
-    [InlineKeyboardButton("نكته 😂", callback_data=\'joke\')],
-    [InlineKeyboardButton("اداة DDOS خفيفه تعليميه 💥", callback_data=\'ddos_tool\')],
-    [InlineKeyboardButton("فحص الرابط 🔗", callback_data=\'check_link\')],
-    [InlineKeyboardButton("توليد كلمات مرور 🔑", callback_data=\'generate_password\')],
+    [InlineKeyboardButton("ملفات موقع 🌐", callback_data=\'website_files\'), InlineKeyboardButton("معلومات IP 📍", callback_data=\'ip_info\')],
+    [InlineKeyboardButton("ايميل وهمي 📧", callback_data=\'temp_email\'), InlineKeyboardButton("ادوات اختراق 🛠️", callback_data=\'hacking_tools\')],
+    [InlineKeyboardButton("بحث عن مستخدم 🔍", callback_data=\'search_user\'), InlineKeyboardButton("سحب الحافظه 📋", callback_data=\'clipboard_pull\')],
+    [InlineKeyboardButton("اسمع بث التلفزيون 📺", callback_data=\'tv_broadcast\'), InlineKeyboardButton("صوت ضحيه 🎤", callback_data=\'victim_sound\')],
+    [InlineKeyboardButton("كيف تصبح هاكر 👨‍💻", callback_data=\'how_to_be_hacker\'), InlineKeyboardButton("فك تشفير سكربتات روبلوكس base64 🔓", callback_data=\'decrypt_roblox\')],
+    [InlineKeyboardButton("معلومات حساب روبلوكس 👤", callback_data=\'roblox_account_info\'), InlineKeyboardButton("زخرفه ✨", callback_data=\'decorate_text\')],
+    [InlineKeyboardButton("نكته 😂", callback_data=\'joke\'), InlineKeyboardButton("اداة DDOS خفيفه تعليميه 💥", callback_data=\'ddos_tool\')],
+    [InlineKeyboardButton("فحص الرابط 🔗", callback_data=\'check_link\'), InlineKeyboardButton("توليد كلمات مرور 🔑", callback_data=\'generate_password\')],
     [InlineKeyboardButton("تعليمات 📜", callback_data=\'instructions\')],
 ]
 main_menu_reply_markup = InlineKeyboardMarkup(main_menu_keyboard)

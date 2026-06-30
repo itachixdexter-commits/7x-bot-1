@@ -10,6 +10,8 @@ import threading
 import time
 from datetime import datetime
 import json
+import os
+import tempfile
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -84,24 +86,30 @@ async def generate_random_email(update: Update, context) -> None:
     query = update.callback_query
     await query.answer()
     
-    # Generate random username (letters and numbers)
-    username_length = random.randint(8, 15)
-    username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=username_length))
-    
-    # Add random numbers at the end sometimes
-    if random.choice([True, False]):
-        username += str(random.randint(1, 999))
-    
-    email = f"{username}@gmail.com"
-    
-    await query.edit_message_text(
-        f"📧 **بريد إلكتروني جديد:**\n\n`{email}`\n\n✅ تم إنشاء البريد بنجاح!",
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔄 إنشاء بريد جديد", callback_data='generate_email')],
-            [InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]
-        ])
-    )
+    try:
+        # Generate random username (letters and numbers)
+        username_length = random.randint(8, 15)
+        username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=username_length))
+        
+        # Add random numbers at the end sometimes
+        if random.choice([True, False]):
+            username += str(random.randint(1, 999))
+        
+        email = f"{username}@gmail.com"
+        
+        await query.edit_message_text(
+            f"📧 **بريد إلكتروني جديد:**\n\n`{email}`\n\n✅ تم إنشاء البريد بنجاح!",
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 إنشاء بريد جديد", callback_data='generate_email')],
+                [InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]
+            ])
+        )
+    except Exception as e:
+        await query.edit_message_text(
+            f"⚠️ حدث خطأ: {e}",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+        )
 
 async def unblock_whatsapp(update: Update, context) -> None:
     """Show WhatsApp unblock guide"""
@@ -116,6 +124,7 @@ async def unblock_whatsapp(update: Update, context) -> None:
 • ✅ **1. جهّز الرسالة**
 
 انسخ هذه الرسالة وعدّل فقط رقمك فيها:
+
 عزيزي فريق دعم واتساب،
 
 تم حظر رقمي من استخدام واتساب وأرغب في معرفة السبب ورفع الحظر إذا أمكن، لأنني أستخدم واتساب للتواصل مع العائلة والعمل.
@@ -1106,31 +1115,30 @@ if __name__ == "__main__":
     print("║   🚀  DeepSeek Live Stream                  ║")
     bot.infinity_polling(timeout=60, long_polling_timeout=30)"""
     
-    # Split code if too long
-    if len(bot_code) > 4096:
-        # Send as file
-        import tempfile
+    try:
+        # Send as file to avoid length issues
         with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode='w', encoding='utf-8') as f:
             f.write(bot_code)
             tmp = f.name
-        try:
-            with open(tmp, 'rb') as f:
-                await query.edit_message_text(
-                    "🤖 **كود بوت التليجرام الجاهز:**\n\nتم إرسال الكود كملف لأنه طويل.",
-                    parse_mode='Markdown',
-                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-                )
-                await update.effective_message.reply_document(
-                    document=f,
-                    filename="telegram_bot.py",
-                    caption="🤖 كود بوت تليجرام جاهز مع DeepSeek AI"
-                )
-        finally:
-            os.unlink(tmp)
-    else:
+        
         await query.edit_message_text(
-            f"🤖 **كود بوت التليجرام الجاهز:**\n\n```python\n{bot_code}\n```",
+            "🤖 **كود بوت التليجرام الجاهز:**\n\nتم إرسال الكود كملف لأنه طويل.",
             parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+        )
+        
+        with open(tmp, 'rb') as f:
+            await update.effective_message.reply_document(
+                document=f,
+                filename="telegram_bot.py",
+                caption="🤖 كود بوت تليجرام جاهز مع DeepSeek AI"
+            )
+        
+        os.unlink(tmp)
+        
+    except Exception as e:
+        await query.edit_message_text(
+            f"⚠️ حدث خطأ أثناء إرسال الكود: {e}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
 

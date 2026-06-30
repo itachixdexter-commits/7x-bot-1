@@ -61,7 +61,9 @@ async def start(update: Update, context) -> int:
 
 async def main_menu(update: Update, context) -> int:
     user = update.effective_user
-    await update.callback_query.edit_message_text(
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
         f"مرحباً {user.mention_html()}!\n\nأهلاً بك في بوت 7X 😈!\nمعرف حسابك التليجرام هو: {user.id}",
         reply_markup=main_menu_reply_markup
     )
@@ -602,6 +604,7 @@ def main() -> None:
             GETTING_CHECK_LINK_URL: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_link)],
         },
         fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(main_menu, pattern='^main_menu$')],
+        per_message=False  # <-- هذا يزيل التحذير
     )
 
     application.add_handler(conv_handler)

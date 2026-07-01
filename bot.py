@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 import tempfile
+from googletrans import Translator
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -111,8 +112,37 @@ async def get_translation(update: Update, context) -> int:
         return GETTING_TEXT_TO_TRANSLATE
     
     try:
-        translator = Translator()
-        translation = translator.translate(text, dest='ar')
+        # استخدام Google Translate API مباشرة
+        url = "https://translate.googleapis.com/translate_a/single"
+        params = {
+            "client": "gtx",
+            "sl": "auto",
+            "tl": "ar",
+            "dt": "t",
+            "q": text
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            translated_text = ""
+            for item in data[0]:
+                if item[0]:
+                    translated_text += item[0]
+            detected_lang = data[2] if len(data) > 2 else "غير معروف"
+        else:
+            # Backup: استخدام MyMemory API
+            url2 = "https://api.mymemory.translated.net/get"
+            params2 = {
+                "q": text,
+                "langpair": "auto|ar"
+            }
+            response2 = requests.get(url2, params=params2, timeout=10)
+            response2.raise_for_status()
+            data2 = response2.json()
+            translated_text = data2.get("responseData", {}).get("translatedText", "حدث خطأ في الترجمة")
+            detected_lang = data2.get("responseData", {}).get("detectedSourceLanguage", "غير معروف")
         
         result = f"""
 🌍 **الترجمة إلى العربية**
@@ -120,13 +150,10 @@ async def get_translation(update: Update, context) -> int:
 📝 **النص الأصلي:**
 {text}
 
-🔤 **اللغة الأصلية:** {translation.src}
+🔤 **اللغة الأصلية:** {detected_lang}
 
 📖 **الترجمة:**
-{translation.text}
-
-📊 **معلومات إضافية:**
-• درجة الثقة: {translation.pronunciation if translation.pronunciation else 'غير متوفرة'}
+{translated_text}
 """
         
         await update.message.reply_text(

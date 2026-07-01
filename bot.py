@@ -12,7 +12,6 @@ from datetime import datetime
 import json
 import os
 import tempfile
-from googletrans import Translator
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (

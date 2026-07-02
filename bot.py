@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 TOKEN = "8729922349:AAGALtZjbmQAmZFx0wEynXK8osEDOAVsG1o"
 
 # Numverify API Key
-NUMVERIFY_API_KEY = "8d6ce257e7b6502633705e2330fd0439"  # استبدل هذا بمفتاحك المجاني
+NUMVERIFY_API_KEY = "8d6ce257e7b6502633705e2330fd0439"
 
 # States for ConversationHandler
 (
@@ -62,6 +62,7 @@ main_menu_keyboard = [
     [InlineKeyboardButton("فك حظر واتس 📱", callback_data='unblock_whatsapp'), InlineKeyboardButton("اتصال وهمي 📞", callback_data='fake_call')],
     [InlineKeyboardButton("توليد بوت تلي جاهز AI 🤖", callback_data='generate_bot')],
     [InlineKeyboardButton("ترجمة إلى العربية 🌍", callback_data='translate_text'), InlineKeyboardButton("تنزيل فيديوهات تيك توك 🎥", callback_data='download_tiktok')],
+    [InlineKeyboardButton("اسم رباعي 🏷️", callback_data='generate_name')],
 ]
 main_menu_reply_markup = InlineKeyboardMarkup(main_menu_keyboard)
 
@@ -83,6 +84,29 @@ async def main_menu(update: Update, context) -> int:
     )
     return CHOOSING_MAIN_MENU
 
+# ======================== ميزة الاسم الرباعي ========================
+
+async def generate_name(update: Update, context) -> None:
+    """Generate a random 4-letter name like ABC_X"""
+    query = update.callback_query
+    await query.answer()
+    
+    # توليد 3 حروف عشوائية
+    letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+    # حرف رابع عشوائي
+    last_letter = random.choice(string.ascii_uppercase)
+    # الاسم النهائي
+    name = f"{letters}_{last_letter}"
+    
+    await query.edit_message_text(
+        f"🏷️ **اسم رباعي جديد:**\n\n`{name}`\n\n✅ تم إنشاء الاسم بنجاح!",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔄 إنشاء اسم آخر", callback_data='generate_name')],
+            [InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]
+        ])
+    )
+
 # ======================== ميزة تنزيل فيديوهات تيك توك ========================
 
 async def download_tiktok(update: Update, context) -> None:
@@ -100,19 +124,15 @@ async def download_tiktok(update: Update, context) -> None:
     )
 
 async def handle_tiktok_download(update: Update, context) -> None:
-    """Download TikTok video without watermark"""
+    """Download TikTok video without watermark - فقط للروابط"""
     url = update.message.text.strip()
     
     # TikTok URL patterns
     tiktok_pattern = r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+'
     
+    # التحقق: إذا كان النص لا يحتوي على رابط تيك توك، لا تفعل شيء
     if not re.search(tiktok_pattern, url):
-        await update.message.reply_text(
-            "❌ الرجاء إرسال رابط صحيح من تيك توك.\n"
-            "مثال: https://www.tiktok.com/@username/video/123456789",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-        )
-        return
+        return  # تجاهل الرسالة بدون رد
     
     try:
         # إرسال رسالة "جاري المعالجة"
@@ -124,19 +144,29 @@ async def handle_tiktok_download(update: Update, context) -> None:
             data={"url": url},
             timeout=30
         )
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+            await processing_msg.delete()
+            await update.message.reply_text(
+                "❌ عذراً، تعذر الاتصال بخدمة التحميل. حاول مرة أخرى.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+            )
+            return
+        
         data = response.json()
         
         if "data" not in data or not data["data"]:
             await processing_msg.delete()
             await update.message.reply_text(
-                "❌ عذراً، تعذر تحميل الفيديو. تأكد من الرابط وحاول مرة أخرى.",
+                "❌ عذراً، تعذر تحميل الفيديو. تأكد من الرابط وحاول مرة أخرى.\n\n"
+                "💡 تأكد أن الرابط صحيح ومتاح للعموم.",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
             )
             return
         
         # الحصول على رابط الفيديو (بدون علامة مائية)
-        video_url = data["data"].get("hdplay") or data["data"].get("play")
+        video_data = data.get("data", {})
+        video_url = video_data.get("hdplay") or video_data.get("play")
         
         if not video_url:
             await processing_msg.delete()
@@ -147,17 +177,20 @@ async def handle_tiktok_download(update: Update, context) -> None:
             return
         
         # معلومات إضافية عن الفيديو
-        video_info = data.get("data", {})
-        title = video_info.get("title", "فيديو تيك توك")
-        author = video_info.get("author", {}).get("unique_id", "مستخدم غير معروف")
+        title = video_data.get("title", "فيديو تيك توك")
+        author = video_data.get("author", {}).get("unique_id", "مستخدم غير معروف")
+        duration = video_data.get("duration", "غير معروف")
         
-        # تحميل الفيديو وإرساله
         await processing_msg.delete()
         
         # إرسال الفيديو للمستخدم
         await update.message.reply_video(
             video=video_url,
-            caption=f"🎬 **فيديو تيك توك**\n\n📌 العنوان: {title}\n👤 الناشر: @{author}\n\n✅ تم التحميل بدون علامة مائية",
+            caption=f"🎬 **فيديو تيك توك**\n\n"
+                   f"📌 {title[:100]}\n"
+                   f"👤 @{author}\n"
+                   f"⏱️ المدة: {duration} ثانية\n\n"
+                   f"✅ تم التحميل بدون علامة مائية",
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔄 تنزيل فيديو آخر", callback_data='download_tiktok')],
@@ -165,16 +198,22 @@ async def handle_tiktok_download(update: Update, context) -> None:
             ])
         )
         
+    except requests.exceptions.Timeout:
+        await processing_msg.delete()
+        await update.message.reply_text(
+            "⏰ انتهى وقت الانتظار. الخادم بطيء، حاول مرة أخرى.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+        )
     except requests.exceptions.RequestException as e:
         await processing_msg.delete()
         await update.message.reply_text(
-            f"❌ حدث خطأ أثناء التحميل: {e}",
+            f"❌ حدث خطأ أثناء التحميل: {str(e)[:100]}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
     except Exception as e:
         await processing_msg.delete()
         await update.message.reply_text(
-            f"⚠️ حدث خطأ غير متوقع: {e}",
+            f"⚠️ حدث خطأ غير متوقع: {str(e)[:100]}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
 
@@ -202,7 +241,6 @@ async def get_translation(update: Update, context) -> int:
         return GETTING_TEXT_TO_TRANSLATE
     
     try:
-        # استخدام Google Translate API مباشرة
         url = "https://translate.googleapis.com/translate_a/single"
         params = {
             "client": "gtx",
@@ -222,7 +260,6 @@ async def get_translation(update: Update, context) -> int:
                     translated_text += item[0]
             detected_lang = data[2] if len(data) > 2 else "غير معروف"
         else:
-            # Backup: استخدام MyMemory API
             url2 = "https://api.mymemory.translated.net/get"
             params2 = {
                 "q": text,
@@ -506,51 +543,27 @@ async def button(update: Update, context) -> int:
     elif query.data == 'download_tiktok':
         await download_tiktok(update, context)
         return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'generate_name':
+        await generate_name(update, context)
+        return CHOOSING_MAIN_MENU
 
     elif query.data == 'hacking_tools':
         hacking_tools_text = """
 • أدوات اختراق الشبكات والأنظمة:
 
-1. Nmap
-لفحص الشبكات واكتشاف الأجهزة والخدمات المفتوحة.
+1. Nmap - فحص الشبكات
+2. Wireshark - تحليل حزم الشبكة
+3. Metasploit - اختبار الثغرات
+4. Aircrack-ng - اختراق الواي فاي
+5. Burp Suite - اختبار أمان الويب
+6. John the Ripper - كسر كلمات المرور
+7. Hydra - اختبار قوة كلمات المرور
+8. Nikto - ماسح ثغرات ويب
+9. SQLmap - استغلال ثغرات SQL
+10. Hashcat - كسر التشفير
 
-2. Wireshark
-لتحليل حزم الشبكة ورصد البيانات المرسلة والمستقبلة.
-
-3. Metasploit Framework
-منصة لاختبار الثغرات وتنفيذ هجمات تحكم عن بُعد.
-
-4. Aircrack-ng
-لاختبار اختراق شبكات الواي فاي (Wi-Fi).
-
-5. Burp Suite
-أداة لاختبار أمان تطبيقات الويب واكتشاف ثغرات مثل XSS وSQL Injection.
-
-6. John the Ripper
-برنامج لكسر كلمات المرور (Password Cracking).
-
-7. Hydra
-أداة اختبار قوة كلمات المرور (Brute Force).
-
-8. Nikto
-ماسح ثغرات ويب (Web Vulnerability Scanner).
-
-9. SQLmap
-لاكتشاف واستغلال ثغرات SQL Injection في قواعد البيانات.
-
-10. Hashcat
-برنامج قوي لكسر كلمات المرور المشفرة.
-
-
----
-
-أدوات نظام لينكس الشائعة في مجال الأمن:
-
-Kali Linux
-توزيعة لينكس مخصصة للاختراق الأخلاقي تحتوي على معظم الأدوات السابقة.
-
-Parrot Security OS
-توزيعة بديلة مع أدوات مشابهة
+أدوات لينكس: Kali Linux, Parrot Security OS
 """
         await query.edit_message_text(hacking_tools_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return CHOOSING_MAIN_MENU
@@ -573,51 +586,16 @@ Parrot Security OS
 
     elif query.data == 'how_to_be_hacker':
         how_to_hacker_text = """
-• 1. ابدأ بتعلّم أساسيات الكمبيوتر: كيف يعمل الجهاز، الملفات، الرام، المعالج.
-
-2. اتقن الشبكات: مثل IP, DNS, البروتوكولات (TCP/IP).
-
-3. استخدم نظام Linux: هو النظام الأساسي للهاكرز المحترفين.
-
-4. تعلم البرمجة: أهم لغات الاختراق: Python، Bash، C، JavaScript.
-
-5. تعرّف على أنواع أنظمة التشغيل: Windows، Linux، Android.
-
-6. استخدم أدوات اختبار الاختراق مثل:
-
-Nmap (للبحث عن الأجهزة).
-
-Wireshark (لمراقبة الشبكة).
-
-Metasploit (لتجربة الثغرات).
-
-7. افهم الثغرات الأمنية: SQL Injection، XSS، Brute Force.
-
-8. مارس عبر منصات تدريب:
-
-HackTheBox
-
-TryHackMe
-
-9. تعلّم الهندسة الاجتماعية: فن خداع الناس لجمع معلومات.
-
-10. تدرّب على اختراق قانوني (CTF) لتطوير مهاراتك.
-
-11. اقرأ كتب وأدلة تعليمية متخصصة.
-
-12. تابع دورات على يوتيوب ومواقع مجانية.
-
-13. احصل على شهادات دولية مثل CEH أو OSCP.
-
-14. ابقَ مطّلعًا على أحدث الثغرات والهجمات.
-
-15. كن أخلاقيًا ولا تخرق القانون.
-
-16. سجّل في مجتمعات هاكرز أخلاقيين لتتعلّم منهم.
-
-17. استخدم مهاراتك في حماية الأنظمة وليس تخريبها.
-
-18. ابدأ صغيرًا، وتمرّن يوميًا، ولا تستعجل الاحتراف
+• 1. ابدأ بتعلّم أساسيات الكمبيوتر
+2. اتقن الشبكات: IP, DNS, TCP/IP
+3. استخدم نظام Linux
+4. تعلم البرمجة: Python, Bash, C, JavaScript
+5. استخدم أدوات اختبار الاختراق
+6. افهم الثغرات الأمنية
+7. مارس عبر HackTheBox و TryHackMe
+8. تعلّم الهندسة الاجتماعية
+9. احصل على شهادات CEH أو OSCP
+10. كن أخلاقيًا ولا تخرق القانون
 """
         await query.edit_message_text(how_to_hacker_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return CHOOSING_MAIN_MENU
@@ -688,19 +666,11 @@ for _ in range(threads):
 
 ✅ لن أستخدم التطبيق فيما يغضب الله تعالى.
 ✅ لن أسرق صور أو حسابات بغرض السرقة أو التجسس على الرسائل.
-✅ سأستخدم التطبيق فقط لغرض:
+✅ سأستخدم التطبيق فقط لغرض المزاح اللطيف والربح المشروع.
 
-المزاح اللطيف.
+⚠️ أُبرئ ذمة مالك ومسؤول التطبيق من أي استخدام خاطئ.
 
-الربح المشروع.
-
-التجربة الشخصية.
-
-الدعاية والإعلانات المسموح بها.
-
-⚠️ أُبرئ ذمة مالك ومسؤول التطبيق من أي استخدام خاطئ أو مخالف يؤدي إلى معصية أو ضرر بالآخرين.
-
-✨ الرجاء استخدام التطبيق بما يرضي الله ويحفظ حقوق الجميع
+✨ الرجاء استخدام التطبيق بما يرضي الله
 """
         await query.edit_message_text(instructions_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return CHOOSING_MAIN_MENU
@@ -712,8 +682,6 @@ for _ in range(threads):
         return await analyze_email(update, context)
 
     return CHOOSING_MAIN_MENU
-
-# ======================== باقي الدوال (get_website_html, get_ip_info, etc.) ========================
 
 async def get_website_html(update: Update, context) -> int:
     url = update.message.text
@@ -989,7 +957,6 @@ async def decrypt_roblox_script(update: Update, context) -> int:
     return CHOOSING_MAIN_MENU
 
 async def analyze_phone_number(update: Update, context) -> int:
-    """Analyze a phone number using numverify API"""
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
@@ -999,7 +966,6 @@ async def analyze_phone_number(update: Update, context) -> int:
     return GETTING_PHONE_NUMBER
 
 async def analyze_email(update: Update, context) -> int:
-    """Analyze an email address"""
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
@@ -1009,7 +975,6 @@ async def analyze_email(update: Update, context) -> int:
     return GETTING_EMAIL_ADDRESS
 
 async def get_phone_analysis(update: Update, context) -> int:
-    """Process phone number analysis"""
     phone_number = update.message.text.strip()
     
     if not phone_number:
@@ -1020,9 +985,7 @@ async def get_phone_analysis(update: Update, context) -> int:
         return GETTING_PHONE_NUMBER
     
     try:
-        # Use numverify API (free tier)
         if NUMVERIFY_API_KEY != "YOUR_API_KEY":
-            # Premium API - more accurate
             response = requests.get(
                 f"https://apilayer.net/api/validate",
                 params={
@@ -1045,10 +1008,6 @@ async def get_phone_analysis(update: Update, context) -> int:
 📶 النوع: {data.get('line_type', 'غير معروف')}
 📡 الشركة: {data.get('carrier', 'غير معروف')}
 ✅ صحة الرقم: {'صحيح ✅' if data.get('valid') else 'غير صحيح ❌'}
-
-📊 **معلومات إضافية:**
-• رمز الاتصال الدولي: {data.get('international_format', 'غير معروف')}
-• الرقم المحلي: {data.get('local_format', 'غير معروف')}
 """
             else:
                 result = f"""
@@ -1056,71 +1015,21 @@ async def get_phone_analysis(update: Update, context) -> int:
 
 📞 الرقم: `{phone_number}`
 ✅ صحة الرقم: غير صحيح ❌
-
-⚠️ الرقم غير صالح أو غير موجود في قاعدة البيانات.
 """
             
             await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         
         else:
-            # Free alternative - Simple validation using regex and country detection
             clean_number = re.sub(r'[^\d+]', '', phone_number)
             is_valid = len(clean_number) >= 7 and len(clean_number) <= 15
-            
-            country_codes = {
-                '+1': 'الولايات المتحدة/كندا', '+44': 'المملكة المتحدة', '+966': 'السعودية',
-                '+971': 'الإمارات', '+974': 'قطر', '+965': 'الكويت', '+968': 'عمان',
-                '+973': 'البحرين', '+962': 'الأردن', '+961': 'لبنان', '+972': 'فلسطين',
-                '+20': 'مصر', '+212': 'المغرب', '+216': 'تونس', '+213': 'الجزائر',
-                '+218': 'ليبيا', '+222': 'موريتانيا', '+249': 'السودان', '+252': 'الصومال',
-                '+253': 'جيبوتي', '+269': 'جزر القمر', '+90': 'تركيا', '+91': 'الهند',
-                '+92': 'باكستان', '+94': 'سريلانكا', '+95': 'ميانمار', '+60': 'ماليزيا',
-                '+62': 'إندونيسيا', '+63': 'الفلبين', '+64': 'نيوزيلندا', '+65': 'سنغافورة',
-                '+66': 'تايلاند', '+81': 'اليابان', '+82': 'كوريا الجنوبية', '+84': 'فيتنام',
-                '+86': 'الصين', '+880': 'بنغلاديش', '+977': 'نيبال', '+98': 'إيران',
-                '+93': 'أفغانستان', '+7': 'روسيا', '+30': 'اليونان', '+31': 'هولندا',
-                '+32': 'بلجيكا', '+33': 'فرنسا', '+34': 'إسبانيا', '+36': 'هنغاريا',
-                '+39': 'إيطاليا', '+40': 'رومانيا', '+41': 'سويسرا', '+45': 'الدنمارك',
-                '+46': 'السويد', '+47': 'النرويج', '+48': 'بولندا', '+49': 'ألمانيا',
-                '+351': 'البرتغال', '+352': 'لوكسمبورغ', '+353': 'أيرلندا', '+354': 'آيسلندا',
-                '+356': 'مالطا', '+357': 'قبرص', '+358': 'فنلندا', '+359': 'بلغاريا',
-                '+370': 'ليتوانيا', '+371': 'لاتفيا', '+372': 'إستونيا', '+373': 'مولدوفا',
-                '+374': 'أرمينيا', '+375': 'بيلاروسيا', '+376': 'أندورا', '+377': 'موناكو',
-                '+378': 'سان مارينو', '+380': 'أوكرانيا', '+381': 'صربيا', '+382': 'الجبل الأسود',
-                '+385': 'كرواتيا', '+386': 'سلوفينيا', '+387': 'البوسنة والهرسك', '+389': 'مقدونيا',
-                '+420': 'جمهورية التشيك', '+421': 'سلوفاكيا', '+423': 'ليختنشتاين', '+43': 'النمسا',
-                '+500': 'جزر فوكلاند', '+501': 'بليز', '+502': 'غواتيمالا', '+503': 'السلفادور',
-                '+504': 'هندوراس', '+505': 'نيكاراغوا', '+506': 'كوستاريكا', '+507': 'بنما',
-                '+508': 'سانت بيير وميكلون', '+509': 'هايتي', '+51': 'بيرو', '+52': 'المكسيك',
-                '+53': 'كوبا', '+54': 'الأرجنتين', '+55': 'البرازيل', '+56': 'تشيلي',
-                '+57': 'كولومبيا', '+58': 'فنزويلا', '+591': 'بوليفيا', '+592': 'غيانا',
-                '+593': 'الإكوادور', '+595': 'باراغواي', '+596': 'مارتينيك', '+597': 'سورينام',
-                '+598': 'أوروغواي', '+61': 'أستراليا', '+670': 'تيمور الشرقية', '+672': 'القارة القطبية الجنوبية',
-                '+673': 'بروناي', '+674': 'ناورو', '+675': 'بابوا غينيا الجديدة', '+676': 'تونغا',
-                '+677': 'جزر سليمان', '+678': 'فانواتو', '+679': 'فيجي', '+680': 'بالاو',
-                '+681': 'والس وفوتونا', '+682': 'جزر كوك', '+683': 'نيوي', '+685': 'ساموا',
-                '+686': 'كيريباتي', '+687': 'كاليدونيا الجديدة', '+688': 'توفالو', '+689': 'بولينيزيا الفرنسية',
-                '+690': 'توكيلاو', '+691': 'ولايات ميكرونيزيا الموحدة', '+692': 'جزر مارشال',
-                '+856': 'لاوس', '+855': 'كمبوديا'
-            }
-            
-            country = "غير معروف"
-            country_code = "غير معروف"
-            for code, name in country_codes.items():
-                if clean_number.startswith(code):
-                    country = name
-                    country_code = code.replace('+', '')
-                    break
             
             result = f"""
 📱 **تحليل رقم الهاتف** (تحليل أساسي - مجاني)
 
 📞 الرقم: `{clean_number}`
-🌍 الدولة: {country}
-🔢 رمز الدولة: +{country_code}
 ✅ صحة الرقم: {'صحيح ✅' if is_valid else 'غير صحيح ❌'}
 
-⚠️ **ملاحظة:** هذا تحليل أساسي مجاني. للحصول على تحليل دقيق، يرجى الحصول على مفتاح API مجاني من apilayer.com
+⚠️ للحصول على تحليل دقيق، احصل على مفتاح API مجاني من apilayer.com
 """
             
             await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
@@ -1138,12 +1047,11 @@ async def get_phone_analysis(update: Update, context) -> int:
     return CHOOSING_MAIN_MENU
 
 async def get_email_analysis(update: Update, context) -> int:
-    """Process email analysis"""
     email = update.message.text.strip()
     
     if not email or '@' not in email:
         await update.message.reply_text(
-            "❌ الرجاء إرسال بريد إلكتروني صحيح (مثال: example@gmail.com).",
+            "❌ الرجاء إرسال بريد إلكتروني صحيح.",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
         return GETTING_EMAIL_ADDRESS
@@ -1157,39 +1065,13 @@ async def get_email_analysis(update: Update, context) -> int:
         email_provider = "غير معروف"
         
         providers = {
-            'gmail.com': 'Google Gmail', 'yahoo.com': 'Yahoo Mail', 'yahoo.fr': 'Yahoo Mail',
-            'yahoo.co.uk': 'Yahoo Mail', 'outlook.com': 'Microsoft Outlook', 'hotmail.com': 'Microsoft Hotmail',
-            'live.com': 'Microsoft Live', 'msn.com': 'Microsoft MSN', 'icloud.com': 'Apple iCloud',
-            'me.com': 'Apple Me', 'mac.com': 'Apple Mac', 'aol.com': 'AOL Mail',
-            'protonmail.com': 'ProtonMail', 'protonmail.ch': 'ProtonMail', 'tutanota.com': 'Tutanota',
-            'tutanota.de': 'Tutanota', 'mail.com': 'Mail.com', 'gmx.com': 'GMX', 'gmx.de': 'GMX',
-            'web.de': 'Web.de', 'yandex.com': 'Yandex Mail', 'yandex.ru': 'Yandex Mail',
-            'zoho.com': 'Zoho Mail', 'fastmail.com': 'FastMail', 'hey.com': 'HEY',
-            'skiff.com': 'Skiff', 'startmail.com': 'StartMail', 'posteo.de': 'Posteo',
-            'mailbox.org': 'Mailbox.org', 'disroot.org': 'Disroot', 'riseup.net': 'Riseup',
-            'autistici.org': 'Autistici', 'inventati.org': 'Inventati', 'keemail.me': 'Keemail',
-            'email.com': 'Email.com', 'usa.com': 'USA.com', 'europe.com': 'Europe.com',
-            'asia.com': 'Asia.com', 'africa.com': 'Africa.com', 'australia.com': 'Australia.com'
+            'gmail.com': 'Google Gmail', 'yahoo.com': 'Yahoo Mail', 'outlook.com': 'Microsoft Outlook',
+            'hotmail.com': 'Microsoft Hotmail', 'icloud.com': 'Apple iCloud', 'protonmail.com': 'ProtonMail'
         }
         
         disposable_domains = [
             'tempmail.com', '10minutemail.com', 'guerrillamail.com', 'mailinator.com',
-            'trashmail.com', 'spamgourmet.com', 'throwawayemail.com', 'temp-mail.org',
-            'getnada.com', 'yopmail.com', 'mailnesia.com', 'spambox.us', 'tempinbox.com',
-            'trash2009.com', 'mailnator.com', 'guerrillamail.org', 'tempmail.io',
-            'dispostable.com', 'fakeinbox.com', 'maildrop.cc', 'temporary-email.com',
-            'mintemail.com', 'mailmetrash.com', 'spamvoid.com', 'trash2009.net',
-            'spam.la', 'mailexpire.com', 'spamtrap.co', 'mailtrap.io', 'fake-mail.net',
-            'mailcatch.com', 'fakemailgenerator.com', 'inboxbear.com', 'smailpro.com',
-            'tempmail.us', 'guerrillamail.info', 'tempemail.co', 'trashmail.net',
-            'spambox.net', 'mailismagic.com', 'spamdecoy.net', 'mailinbox.co',
-            'tempr.email', 'fakemail.net', 'throwawaymail.com', 'guerrillamail.biz',
-            'mailinator2.com', 'trash2009.org', 'spamday.com', 'mailswipe.net',
-            'temp-mail.net', '10minutemail.net', 'guerrillamail.net', 'spamthis.com',
-            'trash2009.info', 'spamail.net', 'mailinator.net', 'tempinbox.co',
-            'guerrillamail.co.uk', 'throwawaymail.net', 'spambox.org', 'mailnator.net',
-            'tempmail.co.uk', 'disposablemail.com', 'fakeinbox.net', 'maildrop.org',
-            'temporarymail.com', 'spam404.com', 'trash2009.biz', 'mailmetrash.com'
+            'trashmail.com', 'throwawayemail.com', 'temp-mail.org', 'getnada.com'
         ]
         
         if domain in disposable_domains:
@@ -1207,18 +1089,9 @@ async def get_email_analysis(update: Update, context) -> int:
             else:
                 domain_status = "غير نشط ❌"
         except:
-            try:
-                import dns.resolver
-                a_records = dns.resolver.resolve(domain, 'A')
-                if a_records:
-                    is_valid = True
-                    domain_status = "نشط ✅"
-                else:
-                    domain_status = "غير نشط ❌"
-            except:
-                domain_status = "تعذر التحقق ⚠️"
-                if '.' in domain and len(domain) > 3:
-                    is_valid = True
+            domain_status = "تعذر التحقق ⚠️"
+            if '.' in domain and len(domain) > 3:
+                is_valid = True
         
         result = f"""
 📧 **تحليل البريد الإلكتروني**
@@ -1228,13 +1101,6 @@ async def get_email_analysis(update: Update, context) -> int:
 📡 مزود البريد: {email_provider}
 🗑️ بريد مؤقت: {'نعم 🗑️' if disposable else 'لا ✅'}
 🌐 حالة الدومين: {domain_status}
-
-📊 **معلومات إضافية:**
-• الجزء المحلي: `{local_part}`
-• النطاق: `{domain}`
-• طول البريد: {len(email)} حرف
-
-⚠️ **ملاحظة:** هذا التحليل أساسي. قد لا يكون دقيقاً 100%.
 """
         
         await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
@@ -1247,7 +1113,6 @@ async def get_email_analysis(update: Update, context) -> int:
     return CHOOSING_MAIN_MENU
 
 async def ddos_explain(update: Update, context) -> None:
-    """Show DDOS tools explanation"""
     query = update.callback_query
     await query.answer()
     
@@ -1256,41 +1121,18 @@ async def ddos_explain(update: Update, context) -> None:
 
 ---
 
-**🛠️ 1. MHDDoS - أشمل أداة متعددة الطبقات**
+**🛠️ 1. MHDDoS**
+رابط: https://github.com/MatrixTM/MHDDoS
 
-هذه الأداة تعتبر من أشهر وأقوى الأدوات، وتدعم أكثر من 56 طريقة هجوم مختلفة، وتعمل على جميع الأنظمة بما في ذلك Termux على الأندرويد. 
+**🛠️ 2. Typhon**
+رابط: https://github.com/G0odKid/Typhon
 
-· **المميزات:** تدعم الطبقات السابعة (Layer 7) مثل هجمات HTTP و Cloudflare Bypass، والطبقة الرابعة (Layer 4) مثل SYN و UDP Floods، وأدوات مساعدة لاكتشاف IP الحقيقي .
-· **رابط الأداة:** https://github.com/MatrixTM/MHDDoS
-· **طريقة التشغيل:**
-  1. استنساخ المستودع: git clone https://github.com/MatrixTM/MHDDoS.git
-  2. الدخول إلى المجلد: cd MHDDoS
-  3. تثبيت المتطلبات: pip install -r requirements.txt
-  4. تشغيل الهجوم (مثال): python3 start.py GET https://example.com 100 60
+**🛠️ 3. ddos_tool_2025**
+رابط: https://github.com/infocyn/ddos-2025
 
 ---
 
-**🛠️ 2. Typhon - أداة متقدمة للطبقات الثلاث**
-
-أداة قوية ومتخصصة لاختبار الضغط على الشبكات، وتتميز بقدرتها على تنفيذ هجمات على الطبقات الثالثة والرابعة والسابعة مع دعم أدوات استطلاع متقدمة .
-
-· **المميزات:** هجمات HTTP/HTTPS عالية السرعة باستخدام asyncio، فيضانات UDP و TCP قوية، وأداة "Origin Finder" لاكتشاف IP الخادم الحقيقي .
-· **رابط الأداة:** https://github.com/G0odKid/Typhon
-
----
-
-**🛠️ 3. ddos_tool_2025 - إطار عمل شامل مع تجاوز للحماية**
-
-إطار عمل مفتوح المصدر مصمم خصيصاً للاختبارات الأخلاقية، ويدعم تقنيات تجاوز الحماية مثل Cloudflare .
-
-· **المميزات:** هجمات متعددة الطبقات (L3/L4/L7)، تقنيات مضخمة (Amplification)، وواجهة سطر أوامر سهلة الاستخدام .
-· **رابط الأداة:** https://github.com/infocyn/ddos-2025
-
----
-
-⚠️ **تنويه قانوني وأخلاقي مهم**
-
-جميع هذه الأدوات صُنعت لأغراض تعليمية واختبار أمني في بيئات مرخصة. استخدامها على أطراف ثالثة دون إذن صريح يُعتبر جريمة إلكترونية في جميع الدول تقريباً ويعرضك لعقوبات قانونية صارمة. المسؤولية القانونية والأخلاقية تقع عليك بالكامل.
+⚠️ **تنويه:** استخدام هذه الأدوات على أطراف ثالثة دون إذن يُعتبر جريمة إلكترونية. المسؤولية القانونية والأخلاقية تقع عليك بالكامل.
 """
     
     await query.edit_message_text(
@@ -1300,7 +1142,6 @@ async def ddos_explain(update: Update, context) -> None:
     )
 
 async def deepseek_prompt(update: Update, context) -> None:
-    """Show DeepSeek prompt link"""
     query = update.callback_query
     await query.answer()
     
@@ -1309,12 +1150,9 @@ async def deepseek_prompt(update: Update, context) -> None:
 
 انسخ هذا الرابط وأعطه لـ DeepSeek واستمتع!
 
-🔗 **رابط البرومبت:**
-https://pastefy.app/EM31V8rs/raw
+🔗 https://pastefy.app/EM31V8rs/raw
 
-
-⚠️ **إخلاء مسؤولية:** 
-أنا أخلّي مسؤوليتي عن أي استخدام خاطئ لهذا البرومبت. استخدام هذا البرومبت يكون تحت مسؤوليتك الشخصية الكاملة.
+⚠️ إخلاء مسؤولية: أنا أخلّي مسؤوليتي عن أي استخدام خاطئ.
 """
     
     await query.edit_message_text(
@@ -1354,8 +1192,11 @@ def main() -> None:
         per_message=False
     )
 
-    # إضافة معالج لروابط تيك توك
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_tiktok_download))
+    # معالج روابط تيك توك - فقط للروابط
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND & filters.Regex(r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+'),
+        handle_tiktok_download
+    ))
     
     application.add_handler(conv_handler)
     application.run_polling(allowed_updates=Update.ALL_TYPES)

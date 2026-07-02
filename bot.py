@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 import tempfile
+import subprocess
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -45,7 +46,8 @@ NUMVERIFY_API_KEY = "8d6ce257e7b6502633705e2330fd0439"
     GETTING_PHONE_NUMBER,
     GETTING_EMAIL_ADDRESS,
     GETTING_TEXT_TO_TRANSLATE,
-) = range(11)
+    GETTING_DDOS_TARGET,
+) = range(12)
 
 # Main menu keyboard
 main_menu_keyboard = [
@@ -65,6 +67,8 @@ main_menu_keyboard = [
     [InlineKeyboardButton("اسم رباعي 🏷️", callback_data='generate_name')],
     [InlineKeyboardButton("رشق تيك و انستا 📈", callback_data='social_boost'), InlineKeyboardButton("ثغرات تيك و انستا 🕳️", callback_data='social_vulnerabilities')],
     [InlineKeyboardButton("ادوات تيرمكس سريه 🖥️", callback_data='termux_tools'), InlineKeyboardButton("ثغرات و بوتات و ادوات تلي 🤖", callback_data='telegram_tools')],
+    [InlineKeyboardButton("تبنيد بثوث تيك 🚫", callback_data='tiktok_ban'), InlineKeyboardButton("فايروس دعس حسابات فيس 💀", callback_data='facebook_virus')],
+    [InlineKeyboardButton("تبنيد حسابات فيس 🛑", callback_data='facebook_ban'), InlineKeyboardButton("DDOS ATTACK 💣", callback_data='ddos_attack')],
 ]
 main_menu_reply_markup = InlineKeyboardMarkup(main_menu_keyboard)
 
@@ -89,7 +93,6 @@ async def main_menu(update: Update, context) -> int:
 # ======================== ميزة الاسم الرباعي ========================
 
 async def generate_name(update: Update, context) -> None:
-    """Generate a random 4-letter name like ABC_X"""
     query = update.callback_query
     await query.answer()
     
@@ -109,7 +112,6 @@ async def generate_name(update: Update, context) -> None:
 # ======================== ميزة تنزيل فيديوهات تيك توك ========================
 
 async def download_tiktok(update: Update, context) -> None:
-    """Show TikTok download instructions"""
     query = update.callback_query
     await query.answer()
     
@@ -123,7 +125,6 @@ async def download_tiktok(update: Update, context) -> None:
     )
 
 async def handle_tiktok_download(update: Update, context) -> None:
-    """Download TikTok video without watermark"""
     url = update.message.text.strip()
     
     tiktok_pattern = r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+'
@@ -198,20 +199,286 @@ async def handle_tiktok_download(update: Update, context) -> None:
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
 
-# ======================== ميزة الترجمة ========================
+# ======================== ميزة DDOS ATTACK ========================
 
-async def translate_text(update: Update, context) -> int:
-    """Ask user for text to translate"""
+async def ddos_attack(update: Update, context) -> int:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "🌍 الرجاء إرسال النص الذي تريد ترجمته إلى العربية:\n\nمثال: Hello, how are you?",
+        "💣 **أداة DDOS ATTACK**\n\n"
+        "📌 الرجاء إرسال عنوان IP أو رابط الموقع المستهدف:\n"
+        "مثال: 192.168.1.1 أو https://example.com\n\n"
+        "⚠️ **تنبيه:** هذه الأداة لأغراض تعليمية فقط",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+    return GETTING_DDOS_TARGET
+
+async def start_ddos_attack(update: Update, context) -> int:
+    target = update.message.text.strip()
+    
+    if not target:
+        await update.message.reply_text(
+            "❌ الرجاء إرسال هدف صحيح.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+        )
+        return GETTING_DDOS_TARGET
+    
+    await update.message.reply_text(
+        f"💣 **بدء هجوم DDOS على:** `{target}`\n\n"
+        "⏳ جاري تنفيذ الهجوم...\n\n"
+        "⚠️ هذا لأغراض تعليمية فقط",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+    
+    # تنفيذ هجوم بسيط (محاكاة)
+    def run_ddos():
+        try:
+            # محاكاة هجوم بسيط
+            for i in range(10):
+                time.sleep(0.5)
+                print(f"DDOS Attack on {target} - Packet {i+1}")
+        except Exception as e:
+            print(f"DDOS Error: {e}")
+    
+    thread = threading.Thread(target=run_ddos, daemon=True)
+    thread.start()
+    
+    return CHOOSING_MAIN_MENU
+
+# ======================== الأزرار الجديدة ========================
+
+async def tiktok_ban(update: Update, context) -> None:
+    """تبنيد بثوث تيك"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+🚫 **تبنيد بثوث تيك توك**
+
+ارسله اكثر من مره و اعمل ابلاغات ع ملف شخصي لازم البلاغ يناسب حسابه وشدو عليه من حسابات كثيره 
+
+لا إله إلا الله، محمد رسول الله.
+
+| 邀请你现在关闭这种感觉
+您已被授予关闭nstagram帐户的权利。
+完全有权仅报告用户名并提供问题摘要说明的
+链接
+它表达了虐待和骚扰
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def facebook_virus(update: Update, context) -> None:
+    """فايروس دعس حسابات فيس"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+💀 **فايروس دعس حسابات فيسبوك**
+
+فايروس استخدامه بدعس حسابات فيسبوك 
+
+Ba߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠▇ Moradi ▇ 
+.li*▇▇▏◥▇◣┊◢▇◤▕▇▇*li. 
+.li*▇▇▏▃▆▅▎▅▆▃▕▇▇*li. 
+.li*▇▇▏╱▔▕▎▔▔╲▕▇▇*li. 
+.li*▇▇◣◣▃▅▎▅▃◢◢▇▇*li. 
+.li*▇▇▇◣◥▅▅▅◤◢▇▇▇*li. 
+.li*▇▇▇▇◣╲▇╱◢▇▇▇▇*li. 
+.li执㝧执瑩浻牡楧㩮㔱硰执㝧执獧 ฏ๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎ํํํํํํํํํํํํ­ํํํํํํํํํํํํํํํํํํํํ­ํํํํํํํํํํํํํํํํ ค้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้ ฏ๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎ํํํํํํํํํํํํ­ํํํํํํํํํํํํํํํํํํํํ­ํํํํํํํํํํํํํํํํ ค้­้­้­้­้คฏ๎­๎­๎­๎­๎­ํ­ํค้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้้้้้้­้้้้้้้้้้้้้้้ ฏ๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎๎­๎๎๎๎๎๎๎๎ํํํํํํํ敷止瑩 Y6S╋߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔▇ of
+
+تحطه بتعليق وهيك يعلق حسابة
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def facebook_ban(update: Update, context) -> None:
+    """تبنيد حسابات فيس"""
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+🛑 **تبنيد حسابات فيسبوك**
+
+There was a problem opening a shell with root
+|caused Dy
+Superuser/
+SuperSu or by a device that is inproperly rooted.
+o Update BUsybox
+Try
+oving superuser/supersu permissions.
+O annlicatinn and then reganting superuser
+Supersu permissions for this application.
+Vou can check your device to see if it is
+properly
+Androikat
+Uninstall
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def social_boost(update: Update, context) -> None:
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+📈 **روابط رشق تيك و انستا**
+
+https://zefoy.com/
+https://froyz.com/
+https://zyadat.com/
+https://followadd.com
+https://igtools.me/live
+https://igtools.ooo/
+https://igtor.com/
+https://igpro.me/
+https://igsub.me/
+https://tikfollowers.com/tiktok-free-followers
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def social_vulnerabilities(update: Update, context) -> None:
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+🕳️ **ثغرات تيك و انستا**
+
+ثغرة حذف حساب تيك توك:
+(i,m7) لنسخ الكود
+
+طريقة استخدام:
+*تقنع الضحيه عود هو كود لرشق
+*قنعه يحطه بل نبذة (بايو)
+*خلال 3 ثواني ينحذف
+
+ثغرة الموثق:
+ابحث بقوقل عن famous Indian names
+خذ اسم وابحث في التيك
+جرب اليوزر كباسورد
+
+ثغره رباعي تيك توك:
+ابحث عن رباعي مصفر متابعين
+جرب باسوردات مشهورة من قوقل
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def termux_tools(update: Update, context) -> None:
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+🖥️ **ادوات تيرمكس سريه**
+
+# أداة ALL-IN-ONE
+apt update && apt upgrade -y
+pkg install git
+pkg install python
+rm -rf ALL-IN-ONE
+git clone --depth=1 https://github.com/U7P4L-IN/ALL-IN-ONE.git
+cd ALL-IN-ONE
+python3 ALL.py
+
+# أداة kxss لفحص XSS
+git clone https://github.com/Emoe/kxss
+cd kxss
+apt install golang -y
+go build main.go
+mv main /bin/xss
+
+# أداة SocialBox لاختراق السوشيال ميديا
+pkg update && pkg upgrade -y
+apt-get install git
+git clone https://github.com/TunisianEagles/SocialBox.git
+cd SocialBox
+chmod +x SocialBox.sh
+chmod +x install-sb.sh
+bash install-sb.sh
+bash SocialBox.sh
+
+# أداة تتبع IP
+git clone https://github.com/Whomrx666/Xtracking.git
+cd Xtracking
+pip install -r requirements.txt
+python3 Xtracking.py
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def telegram_tools(update: Update, context) -> None:
+    query = update.callback_query
+    await query.answer()
+    
+    text = """
+🤖 **ثغرات و بوتات و ادوات تلي**
+
+بريدات الشركه:
+stopCA@telegram.org, abuse@telegram.org, Support_Team@telegram.org
+
+طريقة فك حظر الحساب:
+1. ادخل @spambot
+2. ارسل start
+3. ارسل "هذا خطاء"
+4. اضغط نعم
+5. اضغط "لا لم اقم بهذا قط"
+6. ارسل: "لقد تم الأبلاغ عن حسابي بسبب كراهية بعض الناس لي"
+7. انتظر نصف ساعه
+8. ارسل /start
+
+انتحال الشخصية:
+1. انتحل شخصية الضحيه
+2. ابلغ عنه في @notoscam
+3. ارسل: Hello I would like to inform you of a problem...
+4. ارسل معلومات الحساب
+
+كود حظر قنوات:
+ハッカー世界と架空の世界を作るには、私たちはHRB🔞鳥の攻撃チャンネル電報ではありませんイラクの国に爆弾が表示されま日本クラウンと私たちの国は中国の誇り、世界の王たちは、私たちは私たちの手の中に悪い将来されているを立つ人すべてを破壊する私たちは、将来の王たち、私の兄弟、私のp tのbのkのH B Rレッツありますハッカー世界と架空の世界を作る ** ☜ هنا تحط معرف القناه
+"""
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
+    )
+
+async def translate_text(update: Update, context) -> int:
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        "🌍 الرجاء إرسال النص الذي تريد ترجمته إلى العربية:",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
     )
     return GETTING_TEXT_TO_TRANSLATE
 
 async def get_translation(update: Update, context) -> int:
-    """Translate text to Arabic using Google Translate API directly"""
     text = update.message.text.strip()
     
     if not text:
@@ -275,7 +542,7 @@ async def get_translation(update: Update, context) -> int:
         
     except Exception as e:
         await update.message.reply_text(
-            f"⚠️ حدث خطأ أثناء الترجمة: {e}\nالرجاء المحاولة مرة أخرى.",
+            f"⚠️ حدث خطأ أثناء الترجمة: {e}",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔄 إعادة المحاولة", callback_data='translate_text')],
                 [InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]
@@ -284,909 +551,7 @@ async def get_translation(update: Update, context) -> int:
     
     return CHOOSING_MAIN_MENU
 
-# ======================== الأزرار الجديدة ========================
-
-async def social_boost(update: Update, context) -> None:
-    """روابط رشق تيك و انستا"""
-    query = update.callback_query
-    await query.answer()
-    
-    text = """
-الموقع الاول::
-
- https://zefoy.com/
-
-الموقع الثاني::
-
-https://froyz.com/
-
-https://zyadat.com/
-https://followadd.com
-smmcpan.com
-seoclevers.com
-followergi.com
-seorrs.com
-https://drd3m.com
-
-https://igtools.me/live
-
-رابط رشق قنوات تلي 
-https://en.mrpopular.net/get-free-telegram-subscribers.php
-
-https://igtor.com/Story
-
-روابط رشق تيك توك 👇🏻.. 
-https://zefoy.com
-
-https://tikfollowers.com/tiktok-free-followers
-------------------------------------------------------
-
-e_lx:
-روابط رشق انستا
-
-
-روابط رشق انستا 👇🏻
-https://igtools.ooo/
-https://igtor.com/
-https://igpro.me/
-https://igsub.me/
-https://sifresiz.instahile.co/story-views
-https://freer.in/?r=home
------------------------------------------------------
- 👇🏻رابط يرشق انستا 150  متابع 
-https://i.anindabegeni.com/
-
-Igtools.ooo
-424. 
-425. Instagramyl.weebly.com
-426. 
-427. https://www.instaore.com/tools
-428. 
-429. http://takipciyurdu.com/tags/takipci-gonder
-430. 
-431. https://instagramtakiphilesi.com/
-432. 
-433. https://instagram.sosyalmedya.store/takipci/
-434. 
-435. https://takipmerkezi.com.tr/
-436. 
-437. https://takipcihilecin.com/tools
-438. 
-439. https://takipci.instager.net/
-440. 
-441. https://takipcipanelim.com/
-442. 
-443. https://www.popileriz.com/tools
-444. 
-445. https://www.instaloji.com/
-446. 
-447. https://takipci.instager.net/blog/instagram-sifresiz-takipci-hilesi
-448. 
-449. https://takipcisitelerin.com/
-450. 
-451. http://instagrambegenin.com/tools
-452. 
-453. https://www.instafenomeni.net/tools
-454. 
-455. http://instabayim.com/
-456. 
-457. https://www.insfollow.com/tags/instagram-takipci-gonder
-458. 
-459. https://takipapp.com/
-460. 
-461. https://sosyalmedyakazan.com/
-462. 
-463. https://www.instaore.com/tools
-464. 
-465. http://takipciyurdu.com/tags/takipci-gonder
-466. 
-467. https://www.takipcipanelim.com/tools
-468. 
-469. https://maxtakipci.com/tools
-470. 
-471. http://instagrambegenin.com/
-472. 
-473. https://www.instaloji.com/tools
-474. 
-475. https://www.instatakipcibegeni.net/tools
-476. 
-477. https://takipcicenter.com/tools
-478. 
-479. http://hepinsta.com/
-480. 
-481. https://instagram.takipcisitelerin.com/
-482. 
-483. https://www.takipcibegenigonder.com/
-484. 
-485. https://mediainsta.com/
-486. 
-487. https://www.silvertakipci.com/
-488. 
-489. https://insfollow.com/tools
-490. 
-491. http://www.seononline.com/tools
-492. 
-493. https://instatakipmerkezi.com/
-494. 
-495. https://takipmerkezi.com.tr/blog/instagram-takipci-gonder-firsatlari
-496. 
-497. https://www.mediainsta.com/tools
-498. 
-499. https://takipcilerbizden.com/tools
-
-500. 
-501. https://4takip.com/
-502. 
-503. https://begendiler.com/
-504. 
-505. https://silvertakip.net/tools
-506. 
-507. https://www.xtakipci.net/
-508. 
-509. https://takipsi.com/
-510. 
-511. https://vipinstagramtakipci.com/
-512. 
-513. https://ibegenapp.com/
-514. 
-515. http://igtakip.win/
-516. 
-517. https://instagram.begenin.net/
-518. 
-519. https://takipcisepeti.com/tools
-520. 
-521. https://www.silvertakipci.com/
-522. 
-523. https://insfollow.com/tools
-524. 
-525. https://silverbegeni.com/
-526. 
-527. https://instagramhilecim.com/tools
-528. 
-529. https://www.begensinler.com/
-530. 
-531. https://takipcistar.com/tools
-532. 
-533. http://silvertakip.com/
-534. 
-535. https://vipinstagramtakipci.com/tools
-536. 
-537. https://takipci1.com/tools
-538. 
-539. https://www.takipcipro.com/tools
-540. 
-541. https://instagramtakiphilesi.com/instagram-begeni-paneli/index.html
-54
-
-2. 
-543. http://takipciyurdu.com/
-544. 
-545. https://begendiler.com/
-546. 
-547. https://www.instafenomeni.net/
-548. 
-549. https://instakipci.pro/
-550. 
-551. https://insmobil.com/
-552. 
-553. https://ibegenapp.com/tools
-554. 
-555. https://v3sc.tk/Instagram-Sifresiz-Takipci
-556. 
-557. https://instahilesiapp.com/tools
-558. 
-559. http://trendsosyal.com/instagram.php
-560. 
-561. https://takipciaraci.com/tools
-562. 
-563. https://i.sosyaltechs.com/tools
-564. 
-565. https://www.seononline.com/
-566. 
-567. https://tektakipci.com/tools
-568. 
-569. http://www.enginuzun.org/baskasina-takipci-gonderme-baska-hesaba-begeni-gonder.html
-570. 
-571. https://www.takipsosyal.com/
-572. 
-573. http://www.hepinsta.com/tools/send-follower
-574. 
-575. https://instagram.takipcisatinal.com.tr/tag/instagram-takipci-gonder/
-576. 
-577. http://begenipaneli.net/tools
-578. 
-579. https://silverbegeni.com/tools
-580. 
-581. https://sosyalmedyakazan.com/tools
-582. 
-583. https://instagramtakiphilesi.com/instagram-begeni-paneli/index.html
-584. 
-585. http://takipciyurdu.com/
-586. 
-587. https://www.youtube.com/watch?v=10tqMjwDTNE
-588. 
-589. https://instavevo.com/tools
-590. 
-591. https://iyitakipci.com/tools
-592. 
-593. https://www.instagramozel.com/
-
-👇🏻رابط يرشق انستا 150  متابع 
-https://i.anindabegeni.com/
-"""
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-    )
-
-async def social_vulnerabilities(update: Update, context) -> None:
-    """ثغرات تيك و انستا"""
-    query = update.callback_query
-    await query.answer()
-    
-    text = """
-روح لحساب الي تريد تبنده وبلغ على كل تعاليقه خطاب كراهيه وراهه روح على الفيدوات تشد عليهم كلهم تحرش او تنمر-شخص اعرفه /بعدين روح شد على الحساب وره ما يبلع انتهاك شد 10 مزعج و10 تحرش او تنمر شخص اعرفه (على الحساب
-
-طريقه ثانيه 
-
-اول خطوه تروح الحساب ضحيه
-تبلغ ع كل الفيديوهات تنطي خطاب كراهي وبعدهه تروح تنطي ابلاغ ع حساب وتنطي آخر وتلصق هاذا الكود 
-
- дравствуйте, компания tik, пожалуйста, забаньте мне этот аккаунт, потому что он публикует ложные новости, а их подлинность не была доказана.
-
-ثغره حذف حساب ( تيك توك )
-
-( i,m 7 ) لنسخ الكود
-
-طريقة استخدام 
-
-*تقنع الضحيه عود هو كود لرشق
-*قنعه يحطه بل نبذة (بايو) 
-*خلال 3 ثواني ينحذف
-
-صيد فرنسي موثق🙄
-
-اول شي افتح vpn ع فرنسا وبحث موثق اخر فديو لة 2018 بعدين خش علية وحط اباس زي يوزر😳🇫🇷 اهم شي انتبه لا يكون في تحقق 🤔🌿
-
-ذي برايفت
-
-
-ثغرة الموثق
-
-اول شي تبحث بالبحث حق قوقل عن famous Indian names او popular Indian names و تاخذ من هناك اسم و تروح بحث التيك تحط الاسم تدور في الحسابات مثلا لقيت يوزر كذا soldos52 تاخذه و تروح تسجيل دخول و تحط الباس هو اليوزر اذا ما ضبط مرات يكون الاسم الي فوق Soldos بدون الارقام و مرات مع الارقام برضو تجرب الباس و الثغره يحتاج لها صمله
-
-ثغره المزغرف
-تروح البحث تكتب كتابه مزغرف
-تشوف يوزر تقدر تخمن الباس بس نسبت 30% ما يضبط
-تشوف الاسم الفوق إذا أكثر من 6احرف تنسخه إذا مسوين عليه حساب جيميل تروح تسوي حساب إذا ضبط تروح تسوي نسيت كلمت السر بعده تحط كلمت السر الجديده ومبروك
-
-
-
-ثغره رباعي تيك توك
-
-تروح للبحث
-
-تكتب اي رباعي
-
-كون مصفر متابعين ومابي صوره
-
-تروح تكتب بل كوكل باسوردات مشهورة
-
-وتجرب علية
-
-وراح يضبط %100
-
-اذا ما ضبط جرب غيرة
-
-안녕하세요 틱톡은 모든 방송법과 회사법을 위반하고, 마약과 폭력적이고 폭력적인 발언을 조장하고 살인과 폭력을 선동하는 테러리스트의 방송을 모욕하는 방법을 팔로워들에게 가르치는 분입니다. 방송을 삭제 해주세요. 감사합니다
-
-
-طيرو فيه البثوث المخالفه فقط ♥️
-
-ثغرة سحب حسابات عالية
-تكتب iraq بل عراق لو tty
-
-
-تبحث حسابات عالية
-
-يكون اليوزر هيج kdksowoeoie38
-
-والاسم نفس يوزر
-
-تذهب الا نسيت كلمه سر
-
-اذا الايميل طلع متسجل
-
-تذهب للجميل تسوي ايميل بي وتسحبة
-"""
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-    )
-
-async def termux_tools(update: Update, context) -> None:
-    """ادوات تيرمكس سريه"""
-    query = update.callback_query
-    await query.answer()
-    
-    text = """
-باستخدام هذه الأداة، يمكنك فرض هجوم عنيف على فيس بك Facebook، وتثبيت أداة اختراق واي فاي Wifi وتثبيت أدوات إعداد تريمكس  ويمكنك تثبيت سمة Tarmux في جهازك بسهولة وبدون اي مشاكل 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑 
-----------------------------
-
-apt update && apt upgrade -y
-
-pkg install git
-
-pkg install python
-
-rm -rf ALL-IN-ONE
-
-git clone --depth=1 https://github.com/U7P4L-IN/ALL-IN-ONE.git
-
-cd ALL-IN-ONE
-
-python3 ALL.py
-
-اداة فحص المواقع للعثور على ثغرة اكس اس اس Xss
-هاذي الاداه مصممه للعثور عن المواقع المصابه بهاذي الثغره
-طرريقة التشغيل على تطبيق تريمكس 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-$ git clone https://github.com/Emoe/kxss
-
-$ cd kxss 
-
-$ apt install golong -y 
-
-#go build main.go 
-
-$ mv main /bin/xss
-
-$ apt install getallurls
-
-هاذي الاداه يمكنك عبرها اختراق فيس وجيميل وانستغرام وتويتر فقط جيد استخدامها وتشتغل بدون اي مشاكل شغال على تطبيق تريمكس 
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-$ pkg update && pkg upgrade -y
-
-$ apt-get install git
-
-$ git clone https://github.com/TunisianEagles/SocialBox.git
-
-$ cd SocialBox
-
-$ chmod +x SocialBox.sh
-
-$ chmod +x install-sb.sh
-
-$ bash install-sb.sh 
-
-$ bash SocialBox.sh
-
-e_lx:
-| 10 ادوات في اداة واحدة |
-
-
-أدوات الكل في واحد [أفضل 10 أدوات اختراق]🔰
-
-الكل في واحد [10 أدوات] يمكن أن يعمل على أجهزة مختلفة لأنه برنامج متعدد الأغراض. باستخدام هذه الأداة، يمكنك فرض هجوم عنيف على فيسبوك، وتثبيت أداة اختراق Wifi، وتثبيت أدوات إعداد Tarmux، ويمكنك تثبيت سمة Tarmux في جهازك بسهولة فقط عبر تريمكس 
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-apt update && apt upgrade -y
-
-pkg install git
-
-pkg install python
-
-rm -rf ALL-IN-ONE
-
-git clone --depth=1 https://github.com/U7P4L-IN/ALL-IN-ONE.git
-
-cd ALL-IN-ONE
-
-python3 ALL.py
-
-أداة لجمع معلومات الضحية عبر بروتوكول الإنترنت مع ميزة إظهار رقم الهاتف التثبيت على  تريمكس 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-$- apt update
-
-$- pkg install python3
-
-$- pkg install python
-
-$- pip install requests
-
-$- pip install render
-
-$- pip install time
-
-$- pip install bs4
-
-$- pip install uuid
-
-$- pip install random
-
-$- pkg install git
-
-$- git clone https://github.com/AlmunharifHamoudi/ip.git
-
-$- cd ip
-
-$- python ip.py
-
-⌯ اداة اختراق شبكات الوايفاي عبر  تريمكس 
-
-• مميزات الاداه كتالي 
-1) بدء وضع المراقبة
-2) إيقاف وضع المراقبة
-3) فحص الشبكات
-4) الحصول على مصافحة (Handshake)
-5) إنشاء قائمة كلمات مرور
-6) تثبيت أدوات الشبكات اللاسلكية
-7) هجمات على شبكات WPS
-8) فحص شبكات WPS
-9) كسر المصافحة باستخدام rockyou.txt
-10) كسر المصافحة باستخدام قائمة كلمات المرور
-11) كسر المصافحة بدون قائمة كلمات المرور
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-$- apt update 
- 
-$- apt install git 
-
-$- apt install python
-
-$- apt install python3
- 
-$- apt install cmatrix
-
-$- rm -rf WIFI-HACKING
-
-$- git clone --depth=1 https://github.com/U7P4L-IN/WIFI-HACKING.git
-
-$- cd WIFI-HACKING
-
-$- ls
-
-$- python WIFI.py
-
-عبر هاذي الاداه يمكنك عمل فيزات مشحونه عبر تريمكس 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-1- apt update 
-
-2- apt upgrade 
-
-3- apt install git 
-
-4- git clone https://github.com/INDOnimous/Card-Number
-
-5- ls
-
-6- cd Card-Number
-
-7- ls 
-
-8- chmod +x *
-
-9- ls
-
-10- sh Card.sh
-
-عبر هاذي الاداه يمكنها ان ترسل كمية هائلة من الرسائل النصية القصيرة والمكالمات إلى هدف واحد
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-pkg update
-
-pkg install python3 python3-pip git -y
-
-git clone https://github.com/LimerBoy/Impulse
-
-cd Impulse/
-
-pip3 install -r requirements.txt
-
-python3 impulse.py --help
-
-هاذي الاداه لتتبع شخص ما التشغيل على  تريمكس 
-
-التعليمات 👇
-IP Tracker : لتتبع عنوان IP الخاص بشخص ما
-إظهار IP الخاص بك : لرؤية عنوان IP الخاص بك
-تعقب الهاتف : لتتبع رقم هاتف شخص ما
-تعقب اسم المستخدم : لتتبع الأشخاص بالاسم
-خروج : للخروج من الأدوات
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-$ apt update
-
-$ apt upgrade
-
-$ pkg install git
-
-$ pkg install python
-
-$ pkg install python3
-
-$ git clone https://github.com/Whomrx666/Xtracking.git
-
-$ cd Xtracking
- 
-$ pip install -r requirements.txt
-
-$ python3 Xtracking.py
-
-200 اداه بداخل اداه واحده 
-هاذي الأدوات مهمه جداً ب القرصنه والتلاعب والكثير من الاشياء الذي قد تجدها بداخلها 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑 
-------------------------------------
-
-$ apt update && apt upgrade -y
-
-$ apt install git
-
-$ apt install php
-
-$ apt install curl
-
-$ apt install ruby
-
-$ apt install figlet
-
-$ apt install python2
-
-$ gem install lolcat
-
-$ git clone https://github.com/TUANB4DUT/TOOLSINSTALLERv3
-
-$ cd TOOLSINSTALLERv3
-
-$ chmod +x TUANB4DUT.sh
-
-$ sh TUANB4DUT.sh
-
-
-----------------   ------------------
-
-اداه اختراق كاميرا الضحيه + تسجيل صوت للضحيه عن طريق لينك
-
-$- apt-get update -y
-
-$- apt-get upgrade -y
-
-$- pkg install git -y
-
-$- pip install lolcat
-
-$- git clone https://github.com/Expert-Hacker/E-TOOL.git
-
-$- cd E-TOOL
-
-$- bash setup.sh
-
-• بعد انتهاء التثبيت لو عايز تخترق الكاميرا هتكتب الاوامر التالية
-$- ls
-
-$- cd voice
-
-$- bash camera.sh
-
-• هتسيبو يحمل بعدها هتختار السرفر اختار ال انت عيزو 1 او 2 لو طلب منك (Y/N) اختار Y بعدها هتكتب الرقم ال هيكون موجود قودامك ال هيطلبو بعدها تسيبو يحمل هيديك لينك ابعتو للضحيه وخليه يديلو الاذونات وبس كده
-
-• لو عايز تسجل صوت للضحيه اكتب الاوامر التاليه
-
-• لو لسه ف مجلد camera اكتب 
-
-$- cd ..
-
-• الامر ال فوق ده للرجوع لو انت لسه مش فاهم 
-
-$- cd voice
-
-$- bash voice.sh
-
-• وهتنفذ نفس ال فوق عادي وبس كده.
-
-ادوات اختراق انستا تريمكس 
-
-pkg install python2
-
-pkg install python
-
-pkg install git
-
-pkg install python2 git -y
-
-pip2 install requests
-
-pip2 install bs4
-
-git clone https://github.com/TERMUXID3/instabrute
-
-cd instabrute
-
-chmod +x *
-
-python2 instabrute.py
-
-أداة تريمكس  لاستخراج أرقام هنديه عشوائيه 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-$  apt update
-
-$  apt install git
-
-$ apt install python
-
-$ apt install python3
-
-$  git clone https://github.com/BlackFoxTM/tracenum
-
-$  cd tracenum
-
-$  pip3 install -r requirements.txt
-
-$  python3 main.py
-
-أداة القرصنة الألبانيه!! أدوات لمساعدتك في القرصنه الأخلاقيه، واختراق وسائل التواصل الاجتماعي، ومعلومات الهاتف، وهجوم Gmail، والهجوم على رقم الهاتف، واكتشاف المستخدم، والرسائل القصيره المجهوله واختراق كاميرا الويب • أداه قويه لهجوم DDOS!! فقط على تريمكس
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-
-pkg install git
-
-git clone https://github.com/4lbH4cker/ALHacking
-
-cd ALHacking
-
-bash alhack.sh
-
-تُستخدم هذه الأداة المسماة W0rm-GPT بشكل أساسي للبحث في جميع الأنشطة التي لا يمكن لـ ChatGPT تقديمها، وجميع واجهات برمجة التطبيقات العاملة موجودة في البرنامج النصي فقط كمساعده وذكاء اصطناعي على تطبيق  تريمكس 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-
-pkg up -y
-
-pkg install git wget python -y
-
-git clone https://github.com/samay825/W0rm-Gpt
-
-cd W0rm-Gpt
-
-pip install -r requirements.txt
-
-python3 main.py
-
-اختراق الكاميرا اداة HACK-CAMERA، أداة جديدة لالتقاط الصور. على عكس الآخرين الذين يستخدمون servero وngrok، فإن HACK-CAMERA يجعل الأمور أسهل. يستخدم الكثير من الأشخاص ngrok، لكن لا يعرف الجميع السيرفيو جيدًا. عندما تقوم بمشاركة رابط ngrok، فإنه يظهر تحذيرًا، مما يجعله واضحًا. ولكن مع خيار الارتباط السحابي الخاص بـ HACK-CAMERA، لا توجد تحذيرات. لذلك، استخدم الأداة بحرية دون القلق بشأن التنبيهات، تمامًا مثل الأدوات الأخرى. التثبيت على  تريمكس 
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-------------------------------------
-apt update && apt upgrade -y
-
-apt install git -y
-
-apt install curl -y
-
-apt install wget -y
-
-git clone https://github.com/XPH4N70M/HACK-CAMERA.git
-
-cd HACK-CAMERA
-
-bash setup
-
-bash hack_camera.sh
-
-أداة تصيد تلقائية وسهلة الاستخدام للمبتدئين تحتوي على أكثر من 30 نموذجًا. تستخدم على  تريمكس
-
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-$ cd Xphisher
-
-$ chmod 777 Xphisher.sh
-
-$ bash Xphisher.sh
-
-$ git clone https://github.com/Whomrx666/Xphisher.git
-
-اوامر اداه AMF1لعمل تلغيم صوره لسحب الip :
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-1- pkg install python
-
-2- pkg install git
-
-3- git clone https://github.com/abdalkreemafm/AMF1
-
-4- ls
-
-5- cd AMF1
-
-6- chmod +x AMF1.py
-
-7- python AMF1.py
-
-بعد كذا تكتب رقم 1 وتدوس انتر
-
-منشئ الفيروسات. هي أداة من محطة termux.
-ستقوم هذه الأداة بإنشاء فيروس يمكنه فقط تدمير جهاز الكمبيوتر الذي يعمل بنظام Windows. يمكنك أيضًا تكوين التشغيل التلقائي في محرك أقراص USB
-
-التثبيت على تطبيق  
-#اليك_الاوامر_با_الترتيب_انسخ_الاوامر امر تلو الاخر ولصقه في تطبيق تريمكس يحسن استخدام الاداه لكي تعمل معك 🛑
-----------------------------
-
-git clone https://github.com/Cyber-Dioxide/Virus-Builder/
-
-cd Virus-Builder
-
-pip install -r requirements.txt
-
-python3 Builder.py
-
-apt update -y 
-
-2-$ apt upgrade -y
-
-وبعدها اختار الحرف y
-
-3-$ termux-setup-storage 
-
-وبعدها
-
-4-$ ls 
-
-5-$ cd storage 
-
-وبعدها 
-
-6-$ ls
-
-وبعدها الأمر الاخير للخروج من التطبيق 
-
-7-$ exit
-"""
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-    )
-
-async def telegram_tools(update: Update, context) -> None:
-    """ثغرات و بوتات و ادوات تلي"""
-    query = update.callback_query
-    await query.answer()
-    
-    text = """
-بريدات الشركه
-stopCA@telegram.org, abuse@telegram.org, Support_Team@telegram.org
-
-الموضوع 
-Illegal image +18
-
-
-الرساله الاكترونيه 
-This robot hurts the Telegram community as it spreads porn 
-link bot:     رابط البوت هنا
-
-- طريقة فك حظر حسابك المحضور من المراسله في الخاص:
-
--اولاً : تدخل الى هذا البوت التالي :
- @spambot 
-- ترسل start.
-ثانياً  : ارسل هذا خطاء.
-ثالثاً  : اضغط نعم.
-رابعاً : اضغط لا لم اقم بهذا قط !
-انتظر قليلاً سيقوم بالرد عليك : ماذا حدث؟  
-خامساَ : تُرسل هذا الكود اليه  .
-
-- لقد تم الأبلاغ عن حسابي بسبب كراهية بعض الناس لي ، لم اقم بمراسله احدهم ، يقومون بلأبلاغ عني بدون ادنى سبب .
-
-- تنتظر نصف ساعه ثم تدخل علا البوت وترسل :   
-/start 
-- سوف يقوم بالرد عليك بـإنه قد تم فك الحظر عن حسابك.
-
-- انتحال شخصيه.
-
-تقوم بـ انتحال شخصيه الضحيه والابلاغ عنه  ،  تقوم بتعيين حسابك تفس حساب الضحيه بـ الخلفيه والنبذه وحتى اسم المستخدم ،  مثلا لو كان اسم المستخدم حق الضحيه هكذا  :  
-@mohammed771
-
-تقوم بنسخه وتغيير بسيط تسوي فيه بتغيير حرف او زياده حرف من وسط المعرف هكذا  :
-@mohaamed771
-كي تستطيع تسويته معرف لك. 
-
-ثم تذهب الى بوت الابلاغ عن انتحال الخاص بالشركه. :
-@notoscam
-
-تقوم بمراسله الشركه بهذه الرساله  :
-
-Hello I would like to inform you of a problem that happened to me. Someone has impersonated me.  I woud like you to close his account I will attach his information to you .
-
-ثم ترسل لهم معلومات عن منتحل شخصيتك  هكذا
-
-Name : الاسم
-User name :معرف الضحيه
-Overview :  النبذه 
-
-وتسوي لقطه شاشه لحساب الضحيه وتقوم بإرساله الى البوت مع الصيغ.
-
-وتنتظر لحين تقوم شركه تليجرام بحظره   .
-
-تنويه لا تقوم بتعديل حسابك الى ان يتم حظر الضحيه.
-
-
-  ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈≈ ≈≈≈
-
-رابط المراسلة
-abuse@telegram.org
-الموضوع
-
-The channel publishes violent content
-
-الرسالة الاكترونية
-This channel published porn pictures and pictures of girls and delegations of pornographic +18 and publish pictures of families and expose and intimidate women in exchange for material amounts I hope from the company Telegram and cadre respect to shut the channel at a time and thank you very much
-Link:القناة
-ورح يردو عليك باقرب وقت بس بلغ على القناة شوي
-
-Support_Team@telegram.org
-
-abuse@telegram.org
-
-stopCA@telegram.org
-
- 
-
-كود حظر قنوات تليجرام
-
-
-
-كود تطير قنوات تلجرام تعمله في ابلاغ وترسله 
-30 مره لقنوات الاباحي 
-
-الكود. 👇
-
-ハッカー世界と架空の世界を作るには、私たちはHRB🔞鳥の攻撃チャンネル電報ではありませんイラクの国に爆弾が表示されま日本クラウンと私たちの国は中国の誇り、世界の王たちは、私たちは私たちの手の中に悪い将来されているを立つ人すべてを破壊する私たちは、将来の王たち、私の兄弟、私のp tのbのkのH B Rレッツありますハッカー世界と架空の世界を作る ** ☜ هنا تحط معرف القناه
-
-كود مضمون 100%
-"""
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-    )
-
-# ======================== باقي الدوال ========================
-
 async def generate_random_email(update: Update, context) -> None:
-    """Generate a random Gmail address"""
     query = update.callback_query
     await query.answer()
     
@@ -1214,7 +579,6 @@ async def generate_random_email(update: Update, context) -> None:
         )
 
 async def unblock_whatsapp(update: Update, context) -> None:
-    """Show WhatsApp unblock guide"""
     query = update.callback_query
     await query.answer()
     
@@ -1225,11 +589,7 @@ async def unblock_whatsapp(update: Update, context) -> None:
 
 • ✅ **1. جهّز الرسالة**
 
-انسخ هذه الرسالة وعدّل فقط رقمك فيها:
-
-عزيزي فريق دعم واتساب،
-
-تم حظر رقمي من استخدام واتساب وأرغب في معرفة السبب ورفع الحظر إذا أمكن، لأنني أستخدم واتساب للتواصل مع العائلة والعمل.
+عزيزي فريق دعم واتساب،تم حظر رقمي من استخدام واتساب وأرغب في معرفة السبب ورفع الحظر إذا أمكن، لأنني أستخدم واتساب للتواصل مع العائلة والعمل.
 
 رقمي المحظور هو: +967XXXXXXXX
 
@@ -1241,31 +601,13 @@ async def unblock_whatsapp(update: Update, context) -> None:
 
 ✉️ **2. أرسل الرسالة إلى هذه الإيميلات:**
 
-ارسل نفس الرسالة إلى كل هذه الإيميلات:
-
-• `smb@support.whatsapp.com`
-• `android@support.whatsapp.com`
-• `support@support.whatsapp.com`
-
-> **ملاحظة:** الأفضل ترسل من 3 أو 4 إيميلات مختلفة لنفس الرسالة عشان تزيد فرص فك الحظر.
+• smb@support.whatsapp.com
+• android@support.whatsapp.com
+• support@support.whatsapp.com
 
 ---
 
-🚨 **3. نصائح مهمة:**
-
-✏️ اكتب رقمك مع رمز الدولة، مثل: `+9677xxxxxxx`
-
-🕐 انتظر من 1 إلى 3 أيام للرد.
-
-📩 تابع الإيميلات للرد من واتساب.
-
----
-
-⚠️ **تنبيه:**
-
-• لا تستخدم واتساب المعدل (مثل GBWhatsApp).
-• لا ترسل رسائل جماعية أو إعلانات كثيرة.
-• إذا تم حظرك أكثر من مرة، قد يكون الحظر دائم.
+⚠️ **تنبيه:** لا تستخدم واتساب المعدل (مثل GBWhatsApp)
 """
     
     await query.edit_message_text(
@@ -1275,7 +617,6 @@ async def unblock_whatsapp(update: Update, context) -> None:
     )
 
 async def fake_call(update: Update, context) -> None:
-    """Show fake call website"""
     query = update.callback_query
     await query.answer()
     
@@ -1284,20 +625,13 @@ async def fake_call(update: Update, context) -> None:
 
 قم بالدخول إلى الموقع وحط الرقم ثم قم بالاتصال (مسموح مرة باليوم):
 
-🌐 **الموقع:** https://callmyphone.org/app
-
----
+🌐 https://callmyphone.org/app
 
 📌 **طريقة الاستخدام:**
-
 1. اذهب إلى الرابط أعلاه
 2. أدخل رقمك مع رمز الدولة **بدون + أو 00**
-3. مثال: `967XXXXXXXX` (رقم يمني)
+3. مثال: 967XXXXXXXX
 4. اضغط على زر الاتصال
-
----
-
-⚠️ **ملاحظة:** مسموح مرة واحدة فقط في اليوم.
 """
     
     await query.edit_message_text(
@@ -1307,7 +641,6 @@ async def fake_call(update: Update, context) -> None:
     )
 
 async def generate_bot_code(update: Update, context) -> None:
-    """Show Telegram bot code"""
     query = update.callback_query
     await query.answer()
     
@@ -1315,7 +648,7 @@ async def generate_bot_code(update: Update, context) -> None:
 import requests
 import re
 
-TOKEN = "PUT_YOUR_BOT_TOKEN_HERE"
+TOKEN = "8729922349:AAGALtZjbmQAmZFx0wEynXK8osEDOAVsG1o"
 bot = telebot.TeleBot(TOKEN)
 
 TIKTOK_REGEX = r"https?://(?:www\\.|vm\\.|vt\\.)?tiktok\\.com/[^\\s]+"
@@ -1335,11 +668,9 @@ def get_video(url):
     except:
         return None
 
-
 @bot.message_handler(commands=["start"])
 def start(msg):
     bot.reply_to(msg, "ارسل رابط تيك توك وأنا أرجع لك الفيديو 🎥")
-
 
 @bot.message_handler(func=lambda m: True)
 def handle(msg):
@@ -1352,13 +683,10 @@ def handle(msg):
 
     for link in links:
         bot.send_chat_action(msg.chat.id, "upload_video")
-
         video = get_video(link)
-
         if not video:
             bot.reply_to(msg, "ما قدرت أجيب الفيديو 😢")
             continue
-
         bot.send_video(msg.chat.id, video, caption="🎬 TikTok Downloaded")
 
 bot.infinity_polling()"""
@@ -1369,7 +697,7 @@ bot.infinity_polling()"""
             tmp = f.name
         
         await query.edit_message_text(
-            "🤖 **كود بوت تحميل تيك توك:**\n\nتم إرسال الكود كملف لأنه طويل.",
+            "🤖 **كود بوت تحميل تيك توك:**\n\nتم إرسال الكود كملف.",
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
@@ -1378,14 +706,14 @@ bot.infinity_polling()"""
             await update.effective_message.reply_document(
                 document=f,
                 filename="tiktok_downloader_bot.py",
-                caption="🎬 كود بوت تحميل فيديوهات تيك توك بدون علامة مائية"
+                caption="🎬 كود بوت تحميل فيديوهات تيك توك"
             )
         
         os.unlink(tmp)
         
     except Exception as e:
         await query.edit_message_text(
-            f"⚠️ حدث خطأ أثناء إرسال الكود: {e}",
+            f"⚠️ حدث خطأ: {e}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
         )
 
@@ -1443,23 +771,36 @@ async def button(update: Update, context) -> int:
     elif query.data == 'telegram_tools':
         await telegram_tools(update, context)
         return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'tiktok_ban':
+        await tiktok_ban(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'facebook_virus':
+        await facebook_virus(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'facebook_ban':
+        await facebook_ban(update, context)
+        return CHOOSING_MAIN_MENU
+    
+    elif query.data == 'ddos_attack':
+        return await ddos_attack(update, context)
 
     elif query.data == 'hacking_tools':
         hacking_tools_text = """
-• أدوات اختراق الشبكات والأنظمة:
+🛠️ **ادوات اختراق:**
 
 1. Nmap - فحص الشبكات
-2. Wireshark - تحليل حزم الشبكة
+2. Wireshark - تحليل حزم
 3. Metasploit - اختبار الثغرات
-4. Aircrack-ng - اختراق الواي فاي
+4. Aircrack-ng - اختراق واي فاي
 5. Burp Suite - اختبار أمان الويب
 6. John the Ripper - كسر كلمات المرور
 7. Hydra - اختبار قوة كلمات المرور
 8. Nikto - ماسح ثغرات ويب
 9. SQLmap - استغلال ثغرات SQL
 10. Hashcat - كسر التشفير
-
-أدوات لينكس: Kali Linux, Parrot Security OS
 """
         await query.edit_message_text(hacking_tools_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return CHOOSING_MAIN_MENU
@@ -1482,7 +823,9 @@ async def button(update: Update, context) -> int:
 
     elif query.data == 'how_to_be_hacker':
         how_to_hacker_text = """
-• 1. ابدأ بتعلّم أساسيات الكمبيوتر
+👨‍💻 **كيف تصبح هاكر:**
+
+1. ابدأ بتعلّم أساسيات الكمبيوتر
 2. اتقن الشبكات: IP, DNS, TCP/IP
 3. استخدم نظام Linux
 4. تعلم البرمجة: Python, Bash, C, JavaScript
@@ -1497,7 +840,7 @@ async def button(update: Update, context) -> int:
         return CHOOSING_MAIN_MENU
 
     elif query.data == 'decrypt_roblox':
-        await query.edit_message_text("الرجاء إرسال ملف يحتوي على سكربت روبلوكس مشفر (base64 أو تشفير ضعيف) لفك تشفيره. 🔓", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
+        await query.edit_message_text("الرجاء إرسال ملف يحتوي على سكربت روبلوكس مشفر (base64) لفك تشفيره. 🔓", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return GETTING_DECRYPT_ROBLOX_SCRIPT
 
     elif query.data == 'roblox_account_info':
@@ -1556,17 +899,13 @@ for _ in range(threads):
 
     elif query.data == 'instructions':
         instructions_text = """
-📜 شروط الاستخدام:
+📜 **شروط الاستخدام:**
 
-أتعهد أنا المستخدم للتطبيق بأنني:
+✅ لن أستخدم التطبيق فيما يغضب الله تعالى
+✅ لن أسرق صور أو حسابات
+✅ سأستخدم التطبيق فقط لغرض المزاح اللطيف
 
-✅ لن أستخدم التطبيق فيما يغضب الله تعالى.
-✅ لن أسرق صور أو حسابات بغرض السرقة أو التجسس على الرسائل.
-✅ سأستخدم التطبيق فقط لغرض المزاح اللطيف والربح المشروع.
-
-⚠️ أُبرئ ذمة مالك ومسؤول التطبيق من أي استخدام خاطئ.
-
-✨ الرجاء استخدام التطبيق بما يرضي الله
+⚠️ أُبرئ ذمة مالك التطبيق من أي استخدام خاطئ
 """
         await query.edit_message_text(instructions_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         return CHOOSING_MAIN_MENU
@@ -1636,11 +975,6 @@ async def get_ip_info(update: Update, context) -> int:
             info_text += f"🧭 الإحداثيات: {data.get('lat', 'غير متوفر')}, {data.get('lon', 'غير متوفر')}\n"
             if data.get('lat') and data.get('lon'):
                 info_text += f"📌 رابط لعرض الموقع على الخريطة: https://www.google.com/maps?q={data['lat']},{data['lon']}\n"
-            else:
-                info_text += f"📌 رابط لعرض الموقع على الخريطة: غير متوفر\n"
-
-            if data.get('proxy') or data.get('hosting'):
-                info_text += "\n⚠️ ملاحظة: قد يكون الموقع الجغرافي المعروض هو موقع خادم CDN/Proxy وليس بالضرورة موقع الخادم الأصلي."
 
             await update.message.reply_text(info_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         else:
@@ -1676,8 +1010,6 @@ async def generate_joke(update: Update, context) -> None:
         "لماذا يضع الفيل طلاء أظافر أحمر؟ ليختبئ في شجرة الفراولة. 🐘💅",
         "ما هو أذكى حيوان؟ الزرافة، لأن رأسها في السحاب. 🦒🧠",
         "ماذا قال الجبل للجبل؟ لم نلتقِ منذ زمن طويل. ⛰️⛰️",
-        "لماذا سميت حاسة الشم بهذا الاسم؟ لأنها تشم. 👃",
-        "ما هو وجه الشبه بين الكمبيوتر والحفرة؟ كلاهما يحتاج إلى حفر. 💻🕳️",
         "ما هو الشيء الذي كلما أخذت منه كبر؟ الحفرة. 🕳️",
         "ما هو الشيء الذي يرتفع ولا ينزل؟ العمر. 📈",
         "ما هو الشيء الذي له عين واحدة ولا يرى؟ الإبرة. 👁️🧵",
@@ -1699,14 +1031,7 @@ async def check_link(update: Update, context) -> int:
 
     try:
         domain = re.findall(r'https?://(?:www\.)?([^/]+)\b', url)[0]
-
-        ip_address = None
-        try:
-            ip_address = socket.gethostbyname(domain)
-        except socket.gaierror:
-            await update.message.reply_text("تعذر حل اسم النطاق من الرابط. ❌", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
-            return CHOOSING_MAIN_MENU
-
+        ip_address = socket.gethostbyname(domain)
         response = requests.get(f"http://ip-api.com/json/{ip_address}")
         response.raise_for_status()
         data = response.json()
@@ -1716,24 +1041,9 @@ async def check_link(update: Update, context) -> int:
             info_text += f"📟 عنوان IP: {data.get('query', 'غير متوفر')}\n"
             info_text += f"🏳️ الدولة: {data.get('country', 'غير متوفر')}\n"
             info_text += f"🏙️ المدينة: {data.get('city', 'غير متوفر')}\n"
-            info_text += f"🌍 القارة: {data.get('continent', 'غير متوفر')}\n"
-            info_text += f"🛰️ مزود الخدمة (ISP): {data.get('isp', 'غير متوفر')}\n"
-            info_text += f"🖥️ المنظمة (Organization): {data.get('org', 'غير متوفر')}\n"
-            info_text += f"💼 ASN: {data.get('as', 'غير متوفر')}\n"
-            info_text += f"🧭 الإحداثيات: {data.get('lat', 'غير متوفر')}, {data.get('lon', 'غير متوفر')}\n"
-            if data.get('lat') and data.get('lon'):
-                info_text += f"📌 رابط لعرض الموقع على الخريطة: https://www.google.com/maps?q={data['lat']},{data['lon']}\n"
-            else:
-                info_text += f"📌 رابط لعرض الموقع على الخريطة: غير متوفر\n"
-
-            if data.get('proxy') or data.get('hosting'):
-                info_text += "\n⚠️ ملاحظة: قد يكون الموقع الجغرافي المعروض هو موقع خادم CDN/Proxy وليس بالضرورة موقع الخادم الأصلي."
-
             await update.message.reply_text(info_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         else:
             await update.message.reply_text(f"تعذر الحصول على معلومات IP للرابط: {data.get('message', 'خطأ غير معروف')} ❌", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
-    except requests.exceptions.RequestException as e:
-        await update.message.reply_text(f"حدث خطأ أثناء فحص الرابط: {e} ❌", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
     except Exception as e:
         await update.message.reply_text(f"حدث خطأ غير متوقع: {e} ⚠️", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
     return CHOOSING_MAIN_MENU
@@ -1838,13 +1148,13 @@ async def decrypt_roblox_script(update: Update, context) -> int:
                 decoded_content = base64.b64decode(encrypted_content).decode('utf-8')
                 decrypted_text = "--تم فك بواسطه بوت 7X 😈\n" + decoded_content
             except Exception:
-                decrypted_text = "--تم فك بواسطه بوت 7X 😈\n" + "لم يتم التعرف على التشفير أو فكه. قد يكون التشفير أقوى من المتوقع أو غير مدعوم حالياً.\n" + encrypted_content
+                decrypted_text = "--تم فك بواسطه بوت 7X 😈\n" + "لم يتم التعرف على التشفير أو فكه.\n" + encrypted_content
 
             output_file_name = f"decrypted_{update.message.document.file_name}"
             with open(output_file_name, "w", encoding="utf-8") as f:
                 f.write(decrypted_text)
 
-            await update.message.reply_document(document=open(output_file_name, 'rb'), filename=output_file_name, caption="تم فك تشفير السكربت بنجاح (إذا كان التشفير مدعوماً). 🔓", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
+            await update.message.reply_document(document=open(output_file_name, 'rb'), filename=output_file_name, caption="تم فك تشفير السكربت بنجاح. 🔓", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
 
         except Exception as e:
             await update.message.reply_text(f"حدث خطأ أثناء معالجة الملف: {e} ⚠️", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
@@ -1900,46 +1210,22 @@ async def get_phone_analysis(update: Update, context) -> int:
 📞 الرقم: `{data.get('number', 'غير معروف')}`
 🌍 الدولة: {data.get('country_name', 'غير معروف')}
 🔢 رمز الدولة: +{data.get('country_code', 'غير معروف')}
-📍 الموقع: {data.get('location', 'غير معروف')}
 📶 النوع: {data.get('line_type', 'غير معروف')}
 📡 الشركة: {data.get('carrier', 'غير معروف')}
 ✅ صحة الرقم: {'صحيح ✅' if data.get('valid') else 'غير صحيح ❌'}
 """
             else:
-                result = f"""
-❌ **تحليل رقم الهاتف**
-
-📞 الرقم: `{phone_number}`
-✅ صحة الرقم: غير صحيح ❌
-"""
+                result = f"❌ **تحليل رقم الهاتف**\n\n📞 الرقم: `{phone_number}`\n✅ صحة الرقم: غير صحيح ❌"
             
             await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
-        
         else:
             clean_number = re.sub(r'[^\d+]', '', phone_number)
             is_valid = len(clean_number) >= 7 and len(clean_number) <= 15
-            
-            result = f"""
-📱 **تحليل رقم الهاتف** (تحليل أساسي - مجاني)
-
-📞 الرقم: `{clean_number}`
-✅ صحة الرقم: {'صحيح ✅' if is_valid else 'غير صحيح ❌'}
-
-⚠️ للحصول على تحليل دقيق، احصل على مفتاح API مجاني من apilayer.com
-"""
-            
+            result = f"📱 **تحليل رقم الهاتف** (تحليل أساسي)\n\n📞 الرقم: `{clean_number}`\n✅ صحة الرقم: {'صحيح ✅' if is_valid else 'غير صحيح ❌'}"
             await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
             
-    except requests.exceptions.RequestException as e:
-        await update.message.reply_text(
-            f"❌ حدث خطأ أثناء الاتصال بـ API: {e}",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-        )
     except Exception as e:
-        await update.message.reply_text(
-            f"⚠️ حدث خطأ غير متوقع: {e}",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-        )
+        await update.message.reply_text(f"⚠️ حدث خطأ: {e}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
     return CHOOSING_MAIN_MENU
 
 async def get_email_analysis(update: Update, context) -> int:
@@ -1962,7 +1248,7 @@ async def get_email_analysis(update: Update, context) -> int:
         
         providers = {
             'gmail.com': 'Google Gmail', 'yahoo.com': 'Yahoo Mail', 'outlook.com': 'Microsoft Outlook',
-            'hotmail.com': 'Microsoft Hotmail', 'icloud.com': 'Apple iCloud', 'protonmail.com': 'ProtonMail'
+            'hotmail.com': 'Microsoft Hotmail', 'icloud.com': 'Apple iCloud'
         }
         
         disposable_domains = [
@@ -2002,10 +1288,7 @@ async def get_email_analysis(update: Update, context) -> int:
         await update.message.reply_text(result, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
         
     except Exception as e:
-        await update.message.reply_text(
-            f"⚠️ حدث خطأ أثناء تحليل البريد الإلكتروني: {e}",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
-        )
+        await update.message.reply_text(f"⚠️ حدث خطأ: {e}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]]))
     return CHOOSING_MAIN_MENU
 
 async def ddos_explain(update: Update, context) -> None:
@@ -2013,22 +1296,18 @@ async def ddos_explain(update: Update, context) -> None:
     await query.answer()
     
     text = """
-🛠️ **شرح أدوات DDOS (لأغراض تعليمية فقط)**
+🛠️ **شرح أدوات DDOS (لأغراض تعليمية)**
 
----
-
-**🛠️ 1. MHDDoS**
+**1. MHDDoS**
 رابط: https://github.com/MatrixTM/MHDDoS
 
-**🛠️ 2. Typhon**
+**2. Typhon**
 رابط: https://github.com/G0odKid/Typhon
 
-**🛠️ 3. ddos_tool_2025**
+**3. ddos_tool_2025**
 رابط: https://github.com/infocyn/ddos-2025
 
----
-
-⚠️ **تنويه:** استخدام هذه الأدوات على أطراف ثالثة دون إذن يُعتبر جريمة إلكترونية. المسؤولية القانونية والأخلاقية تقع عليك بالكامل.
+⚠️ **تنويه:** استخدام هذه الأدوات على أطراف ثالثة دون إذن يُعتبر جريمة إلكترونية
 """
     
     await query.edit_message_text(
@@ -2044,11 +1323,11 @@ async def deepseek_prompt(update: Update, context) -> None:
     text = """
 😈 **برومبت ديبسيك**
 
-انسخ هذا الرابط وأعطه لـ DeepSeek واستمتع!
+انسخ هذا الرابط وأعطه لـ DeepSeek!
 
 🔗 https://pastefy.app/EM31V8rs/raw
 
-⚠️ إخلاء مسؤولية: أنا أخلّي مسؤوليتي عن أي استخدام خاطئ.
+⚠️ إخلاء مسؤولية
 """
     
     await query.edit_message_text(
@@ -2083,6 +1362,7 @@ def main() -> None:
             GETTING_PHONE_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone_analysis)],
             GETTING_EMAIL_ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_email_analysis)],
             GETTING_TEXT_TO_TRANSLATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_translation)],
+            GETTING_DDOS_TARGET: [MessageHandler(filters.TEXT & ~filters.COMMAND, start_ddos_attack)],
         },
         fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(main_menu, pattern='^main_menu$')],
         per_message=False

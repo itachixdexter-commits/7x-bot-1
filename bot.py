@@ -232,10 +232,8 @@ async def start_ddos_attack(update: Update, context) -> int:
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("العودة للقائمة الرئيسية 🔙", callback_data='main_menu')]])
     )
     
-    # تنفيذ هجوم بسيط (محاكاة)
     def run_ddos():
         try:
-            # محاكاة هجوم بسيط
             for i in range(10):
                 time.sleep(0.5)
                 print(f"DDOS Attack on {target} - Packet {i+1}")
@@ -250,7 +248,6 @@ async def start_ddos_attack(update: Update, context) -> int:
 # ======================== الأزرار الجديدة ========================
 
 async def tiktok_ban(update: Update, context) -> None:
-    """تبنيد بثوث تيك"""
     query = update.callback_query
     await query.answer()
     
@@ -275,7 +272,6 @@ async def tiktok_ban(update: Update, context) -> None:
     )
 
 async def facebook_virus(update: Update, context) -> None:
-    """فايروس دعس حسابات فيس"""
     query = update.callback_query
     await query.answer()
     
@@ -303,7 +299,6 @@ Ba߷⃒⃓⃑⃔⃕⃖⃛⃜⃝۝۞۩߷⃒⃓⃑⃔⃕⃖⃛⃜⃝⃠⃒⃓⃑�
     )
 
 async def facebook_ban(update: Update, context) -> None:
-    """تبنيد حسابات فيس"""
     query = update.callback_query
     await query.answer()
     
@@ -1365,7 +1360,8 @@ def main() -> None:
             GETTING_DDOS_TARGET: [MessageHandler(filters.TEXT & ~filters.COMMAND, start_ddos_attack)],
         },
         fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(main_menu, pattern='^main_menu$')],
-        per_message=False
+        per_message=True,  # هذا يحل مشكلة حذف الشات
+        block=False,       # هذا يحل مشكلة التأخر
     )
 
     application.add_handler(MessageHandler(
